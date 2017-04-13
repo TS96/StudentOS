@@ -15,13 +15,21 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Sos.cpp">
+    <Object Include="..\..\..\Downloads\sosvc9.obj">
+      <Filter>Source Files</Filter>
+    </Object>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="OS.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PCB.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Object Include="..\..\..\Downloads\sosvc9.obj">
-      <Filter>Source Files</Filter>
-    </Object>
+    <ClInclude Include="PCB.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

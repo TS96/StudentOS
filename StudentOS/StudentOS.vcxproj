@@ -146,7 +146,11 @@
     <Object Include="..\..\..\Downloads\sosvc9.obj" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Sos.cpp" />
+    <ClCompile Include="OS.cpp" />
+    <ClCompile Include="PCB.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="PCB.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
