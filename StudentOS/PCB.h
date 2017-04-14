@@ -1,4 +1,4 @@
-#ifndef PCB_H;
+#ifndef PCB_H
 #define PCB_H
 
 class PCB
@@ -8,14 +8,17 @@ class PCB
 	int priority;
 	int jobSize;
 	int maxCPUTime;
+	int memoryPos;
 
 public:
-	PCB(int , int , int , int );
+	PCB(int , int , int , int , int);
 
 	int getJobNumber();
 	int getPriority();
 	int getJobSize();
 	int getMaxCPUTime();
+	int getMemoryPos();
+	void setMemoryPos(int);
 };
 
 #endif

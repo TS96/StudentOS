@@ -93,6 +93,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>legacy_stdio_definitions.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -146,10 +147,12 @@
     <Object Include="..\..\..\Downloads\sosvc9.obj" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Memory.cpp" />
     <ClCompile Include="OS.cpp" />
     <ClCompile Include="PCB.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Memory.h" />
     <ClInclude Include="PCB.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

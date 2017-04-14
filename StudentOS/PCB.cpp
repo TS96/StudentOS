@@ -2,7 +2,7 @@
 
 
 
-PCB::PCB(int jobN, int pri, int jobS, int maxTime) : jobNumber(jobN), priority(pri), jobSize(jobS), maxCPUTime(maxTime)
+PCB::PCB(int jobN, int pri, int jobS, int maxTime, int memPos) : jobNumber(jobN), priority(pri), jobSize(jobS), maxCPUTime(maxTime), memoryPos(memPos)
 {
 	
 }
@@ -21,5 +21,13 @@ int PCB::getMaxCPUTime() {
 
 int PCB::getPriority() {
 	return priority;
+}
+
+int PCB::getMemoryPos() {
+	return memoryPos;
+}
+
+void PCB::setMemoryPos(int pos) {
+	memoryPos = pos;
 }
 
