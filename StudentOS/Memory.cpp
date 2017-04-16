@@ -23,7 +23,7 @@ bool Memory::insertNewJob(PCB &newJob) {
 		pair<int, int> oldSpace = FST[i];
 		if (oldSpace.second - newJob.getJobSize() != 0) {
 			newJob.setMemoryPos(oldSpace.first);
-			FST[i].first = oldSpace.first + newJob.getJobSize() + 1;
+			FST[i].first = oldSpace.first + newJob.getJobSize();
 			FST[i].second = oldSpace.second - newJob.getJobSize();
 
 		}
@@ -52,6 +52,7 @@ bool Memory::deleteFromMemory(PCB &pcb) {
 		return false;
 	FST.push_back(pair<int, int>(pcb.getMemoryPos(), pcb.getJobSize()));
 	mergeAdjacentSpaces();
+	pcb.setMemoryPos(-1);
 	return true;
 }
 
@@ -61,4 +62,10 @@ int Memory::findSpot(int jobSize) {
 			return i;
 		}
 	return -1;
+}
+
+void Memory::printFST() {
+	for (pair<int, int> p : FST) {
+		cout << p.first << " " << p.second << endl;
+	}
 }

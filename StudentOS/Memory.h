@@ -15,7 +15,7 @@ public:
 	bool deleteFromMemory(PCB &);
 	static bool sortBySize(pair<int, int>, pair<int, int>);
 	static bool sortByAddress(pair<int, int>, pair<int, int>);
-
+	void printFST();
 };
 
 #endif
