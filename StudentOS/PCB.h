@@ -10,6 +10,8 @@ class PCB
 	int maxCPUTime;
 	int memoryPos;
 	int cpuTime;
+	bool blocked;
+	bool doingIO;
 
 public:
 	PCB(int , int , int , int , int);

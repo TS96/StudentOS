@@ -50,9 +50,10 @@ void Memory::mergeAdjacentSpaces() {
 bool Memory::deleteFromMemory(PCB &pcb) {
 	if (pcb.getMemoryPos() == -1)
 		return false;
-	FST.push_back(pair<int, int>(pcb.getMemoryPos(), pcb.getJobSize()));
+	FST.push_back(pair<int, int>(pcb.getMemoryPos(), pcb.getJobSize()-1));
 	mergeAdjacentSpaces();
 	pcb.setMemoryPos(-1);
+	printFST();
 	return true;
 }
 

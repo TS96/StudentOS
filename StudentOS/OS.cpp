@@ -65,6 +65,7 @@ void Drmint(int &a, int p[])
 	cout << "drum interrupt" << " " << a << endl;
 	if (blocked) {
 		siodrum(q.front().getJobNumber(), q.front().getJobSize(), q.front().getMemoryPos(), 0);
+		memory.insertNewJob(q.front());
 		a = 1;
 		blocked = false;
 		return;
