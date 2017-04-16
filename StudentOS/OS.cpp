@@ -5,11 +5,10 @@
 #include <queue>
 
 
-std::queue<PCB> q;
-bool io = false;
-bool blocked = false;
+
 Memory memory;
 PCB currentJob;
+queue<PCB> LTS;
 void siodisk(int jobnum);
 void siodrum(int jobnum, int jobsize, int coreaddress, int direction);
 void ontrace(); // called without arguments
@@ -38,9 +37,10 @@ void Crint(int &a, int p[])
 	PCB temp(p[1], p[2], p[3], p[4], -1);
 	if (memory.insertNewJob(temp)) {
 		memory.printFST();
-		q.push(temp);
 		siodrum(temp.getJobNumber(), temp.getJobSize(), temp.getMemoryPos(), 0);
 	}
+	else
+		LTS.push(temp);
 }
 void Dskint(int &a, int p[])
 {
@@ -56,32 +56,31 @@ void Dskint(int &a, int p[])
 		a = 2;
 	}
 	else*/
-	blocked = false;
-	io = false;
-		a = 2;
+	memory.getNextJob().setDoingIO(false);
+	memory.getNextJob().setBlocked(false);
+	a = 2;
 }
 void Drmint(int &a, int p[])
 {
 	cout << "drum interrupt" << " " << a << endl;
-	if (blocked) {
-		siodrum(q.front().getJobNumber(), q.front().getJobSize(), q.front().getMemoryPos(), 0);
-		memory.insertNewJob(q.front());
-		a = 1;
-		blocked = false;
-		return;
-	}
-		if (!q.empty() && a != 2) {
-			if (q.front().getMemoryPos() == -1)
-				memory.insertNewJob(q.front());
-			p[2] = q.front().getMemoryPos();;
-			p[3] = q.front().getJobSize();
-			p[4] = 1;
-			currentJob = q.front();
-			q.pop();
-			a = 2;
-		}
-		else
+	if (memory.isEmpty()) {
+		if (!LTS.empty()) {
+			memory.insertNewJob(LTS.front());
+			siodrum(memory.getNextJob().getJobNumber(), memory.getNextJob().getJobSize(), memory.getNextJob().getMemoryPos(), 0);
 			a = 1;
+			memory.getNextJob().setBlocked(false);
+			LTS.pop();
+			return;
+		}
+	}
+	if (!memory.isEmpty() && a != 2) {	
+		p[2] = memory.getNextJob().getMemoryPos();;
+		p[3] = memory.getNextJob().getJobSize();
+		p[4] = 1;
+		a = 2;
+		}
+	else
+		a = 1;
 	// Drum interrupt.
 	// At call: p [5] = current time
 }
@@ -89,14 +88,12 @@ void Tro(int &a, int p[])
 {
 	// Timer-Run-Out.
 	// At call: p [5] = current time
-	currentJob.addCPUTime(p[4]);
-	if (currentJob.getCPUTime() >= currentJob.getMaxCPUTime()) {
+	memory.getNextJob().addCPUTime(p[4]);
+	if (memory.getNextJob().getCPUTime() >= memory.getNextJob().getMaxCPUTime()) {
 		cout << "ran out of time" << endl;
 		//siodrum(currentJob.getJobNumber(), currentJob.getJobSize(), currentJob.getMemoryPos(), 1);
-		memory.deleteFromMemory(currentJob);
-		if (!q.empty()) {
-			currentJob = q.front();
-			q.pop();
+		memory.deleteFromMemory(memory.getNextJob());
+		if (!memory.isEmpty()) {
 			a = 2;
 		}
 		else
@@ -115,23 +112,22 @@ void Svc(int &a, int p[])
 	// a = 7 => job wants to be blocked until all its pending
 	// I/O requests are completed
 	if (a == 6) {
-		//q.push(currentJob);
-		siodisk(currentJob.getJobNumber());
-		io = true;
+		siodisk(memory.getNextJob().getJobNumber());
+		memory.getNextJob().setDoingIO(true);
+		cout << memory.getNextJob().isDoingIO() << endl;
 		a = 2;
 	}
 	else if (a == 5) {
-		memory.deleteFromMemory(currentJob);
-		io = false;
+		memory.deleteFromMemory(memory.getNextJob());
 		a = 1;
 	}
 	else if(a==7) {
 		cout << "wating" << endl;
-		if (!io) {
-			blocked = true;
-			siodrum(currentJob.getJobNumber(), currentJob.getJobSize(), currentJob.getMemoryPos(), 1);
-			q.push(currentJob);
-			memory.deleteFromMemory(currentJob);
+		if (!memory.getNextJob().isDoingIO()) {
+			memory.getNextJob().setBlocked(true);
+			siodrum(memory.getNextJob().getJobNumber(), memory.getNextJob().getJobSize(), memory.getNextJob().getMemoryPos(), 1);
+			LTS.push(memory.getNextJob());
+			memory.deleteFromMemory(memory.getNextJob());
 		}
 		a = 1;
 

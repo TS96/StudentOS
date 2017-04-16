@@ -24,6 +24,10 @@ public:
 	int getCPUTime();
 	void addCPUTime(int);
 	void setMemoryPos(int);
+	bool isBlocked();
+	bool isDoingIO();
+	void setBlocked(bool);
+	void setDoingIO(bool);
 };
 
 #endif

@@ -46,3 +46,19 @@ void PCB::addCPUTime(int n) {
 	cpuTime += n;
 }
 
+bool PCB::isBlocked() {
+	return blocked;
+}
+
+bool PCB::isDoingIO() {
+	return doingIO;
+}
+
+void PCB::setBlocked(bool status) {
+	blocked = status;
+}
+
+void PCB::setDoingIO(bool status) {
+	doingIO = status;
+}
+
