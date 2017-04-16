@@ -22,6 +22,7 @@ public:
 	bool isEmpty();
 	void pop();
 	void push(PCB);
+	int getCount();
 };
 
 #endif

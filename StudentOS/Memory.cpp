@@ -40,7 +40,7 @@ bool Memory::insertNewJob(PCB &newJob) {
 void Memory::mergeAdjacentSpaces() {
 	std::sort(FST.begin(), FST.end(), sortByAddress);
 	for (int i = 0; i < FST.size() - 1; i++) {
-		if (FST[i].first + FST[i].second + 1 == FST[i + 1].first) {
+		if (FST[i].first + FST[i].second == FST[i + 1].first) {
 			FST[i].second += FST[i + 1].second;
 			FST.erase(FST.begin() + i + 1);
 		}
@@ -51,7 +51,7 @@ void Memory::mergeAdjacentSpaces() {
 bool Memory::deleteFromMemory(PCB &pcb) {
 	if (pcb.getMemoryPos() == -1)
 		return false;
-	FST.push_back(pair<int, int>(pcb.getMemoryPos(), pcb.getJobSize()-1));
+	FST.push_back(pair<int, int>(pcb.getMemoryPos(), pcb.getJobSize()));
 	mergeAdjacentSpaces();
 	pcb.setMemoryPos(-1);
 	pop();
@@ -89,4 +89,8 @@ void Memory::pop() {
 
 void Memory::push(PCB p) {
 	jobs.push(p);
+}
+
+int Memory::getCount() {
+	return jobs.size();
 }

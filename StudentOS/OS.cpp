@@ -38,6 +38,8 @@ void Crint(int &a, int p[])
 	if (memory.insertNewJob(temp)) {
 		memory.printFST();
 		siodrum(temp.getJobNumber(), temp.getJobSize(), temp.getMemoryPos(), 0);
+		if (memory.getCount() > 1)
+			a = 2;
 	}
 	else
 		LTS.push(temp);
@@ -47,15 +49,6 @@ void Dskint(int &a, int p[])
 	cout << "disk interrupt" << " " << a << endl;
 	// Disk interrupt.
 	// At call: p [5] = current time
-	/*if (!q.empty() && a != 2) {
-		p[2] = q.front().getMemoryPos();
-		p[3] = q.front().getJobSize();
-		p[4] = 4;
-		currentJob = q.front();
-		q.pop();
-		a = 2;
-	}
-	else*/
 	memory.getNextJob().setDoingIO(false);
 	memory.getNextJob().setBlocked(false);
 	a = 2;
@@ -91,13 +84,14 @@ void Tro(int &a, int p[])
 	memory.getNextJob().addCPUTime(p[4]);
 	if (memory.getNextJob().getCPUTime() >= memory.getNextJob().getMaxCPUTime()) {
 		cout << "ran out of time" << endl;
-		//siodrum(currentJob.getJobNumber(), currentJob.getJobSize(), currentJob.getMemoryPos(), 1);
 		memory.deleteFromMemory(memory.getNextJob());
 		if (!memory.isEmpty()) {
 			a = 2;
 		}
-		else
+		else {
+			cout << "Waiting" << endl;
 			a = 1;
+		}
 	}
 	else
 		a = 2;
