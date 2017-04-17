@@ -22,13 +22,13 @@ bool Memory::insertNewJob(PCB &newJob) {
 		int i = findSpot(newJob.getJobSize());
 		pair<int, int> oldSpace = FST[i];
 		if (oldSpace.second - newJob.getJobSize() != 0) {
-			newJob.setMemoryPos(oldSpace.first);
 			FST[i].first = oldSpace.first + newJob.getJobSize();
 			FST[i].second = oldSpace.second - newJob.getJobSize();
 
 		}
 		else
 			FST.erase(FST.begin() + i);
+		newJob.setMemoryPos(oldSpace.first);
 		jobs.push(newJob);
 	}
 	else 
@@ -67,6 +67,13 @@ int Memory::findSpot(int jobSize) {
 	return -1;
 }
 
+int Memory::findMemPos(PCB p) {
+	int i = findSpot(p.getJobSize());
+	if (i != -1)
+		return FST[i].first;
+	return i;
+}
+
 void Memory::printFST() {
 	for (pair<int, int> p : FST) {
 		cout << p.first << " " << p.second << endl;
@@ -94,3 +101,4 @@ void Memory::push(PCB p) {
 int Memory::getCount() {
 	return jobs.size();
 }
+

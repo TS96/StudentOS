@@ -23,6 +23,7 @@ public:
 	void pop();
 	void push(PCB);
 	int getCount();
+	int findMemPos(PCB);
 };
 
 #endif

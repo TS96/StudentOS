@@ -7,12 +7,24 @@
 
 
 Memory memory;
-PCB currentJob;
+PCB beingSwapped;
 queue<PCB> LTS;
+bool swapping = false;
 void siodisk(int jobnum);
 void siodrum(int jobnum, int jobsize, int coreaddress, int direction);
 void ontrace(); // called without arguments
 void offtrace(); // called without arguments 
+
+void runCurrentJob(int &a, int p[]) {
+	if (memory.getCount() != 0) {
+		p[2] = memory.getNextJob().getMemoryPos();;
+		p[3] = memory.getNextJob().getJobSize();
+		p[4] = 1;
+		a = 2;
+	}
+	else
+		a = 1;  
+}
 
 void startup()
 {
@@ -35,14 +47,19 @@ void Crint(int &a, int p[])
 	// p [4] = max CPU time allowed for job
 	// p [5] = current time
 	PCB temp(p[1], p[2], p[3], p[4], -1);
-	if (memory.insertNewJob(temp)) {
-		memory.printFST();
-		siodrum(temp.getJobNumber(), temp.getJobSize(), temp.getMemoryPos(), 0);
-		if (memory.getCount() > 1)
-			a = 2;
+	int memoryPos = memory.findMemPos(temp);
+	if (memoryPos != -1 && !swapping) {
+		siodrum(temp.getJobNumber(), temp.getJobSize(), memoryPos, 0);
+		swapping = true;
+		beingSwapped = temp;
+		if (memory.getCount() > 0) {
+			runCurrentJob(a, p);
+		}
 	}
-	else
+	else {
 		LTS.push(temp);
+		runCurrentJob(a, p);
+	}
 }
 void Dskint(int &a, int p[])
 {
@@ -56,24 +73,33 @@ void Dskint(int &a, int p[])
 void Drmint(int &a, int p[])
 {
 	cout << "drum interrupt" << " " << a << endl;
-	if (memory.isEmpty()) {
-		if (!LTS.empty()) {
-			memory.insertNewJob(LTS.front());
-			siodrum(memory.getNextJob().getJobNumber(), memory.getNextJob().getJobSize(), memory.getNextJob().getMemoryPos(), 0);
-			a = 1;
-			memory.getNextJob().setBlocked(false);
-			LTS.pop();
-			return;
+	if (swapping) {
+		memory.insertNewJob(beingSwapped);
+		runCurrentJob(a, p);
+		swapping = false;
+	}
+	else {
+		if (memory.isEmpty()) {
+			if (!LTS.empty()) {
+				PCB temp = LTS.front();
+				int memoryPos = memory.findMemPos(temp);
+				if(memoryPos!=-1)
+					siodrum(temp.getJobNumber(), temp.getJobSize(), memoryPos, 0);
+				a = 1;
+				temp.setBlocked(false);
+				beingSwapped = temp;
+				swapping = true;
+				LTS.pop();
+				return;
+			}
+			else
+				a = 1;
+		}
+		else {
+			runCurrentJob(a, p);
 		}
 	}
-	if (!memory.isEmpty() && a != 2) {	
-		p[2] = memory.getNextJob().getMemoryPos();;
-		p[3] = memory.getNextJob().getJobSize();
-		p[4] = 1;
-		a = 2;
-		}
-	else
-		a = 1;
+
 	// Drum interrupt.
 	// At call: p [5] = current time
 }
@@ -108,7 +134,6 @@ void Svc(int &a, int p[])
 	if (a == 6) {
 		siodisk(memory.getNextJob().getJobNumber());
 		memory.getNextJob().setDoingIO(true);
-		cout << memory.getNextJob().isDoingIO() << endl;
 		a = 2;
 	}
 	else if (a == 5) {
@@ -122,11 +147,14 @@ void Svc(int &a, int p[])
 			siodrum(memory.getNextJob().getJobNumber(), memory.getNextJob().getJobSize(), memory.getNextJob().getMemoryPos(), 1);
 			LTS.push(memory.getNextJob());
 			memory.deleteFromMemory(memory.getNextJob());
+			runCurrentJob(a,p);
 		}
-		a = 1;
+		else
+			a = 1;
 
 	}
 }
+
 
 
 FILE _iob[] = { *stdin, *stdout, *stderr };
