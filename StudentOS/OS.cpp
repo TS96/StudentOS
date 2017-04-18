@@ -5,7 +5,6 @@
 #include <queue>
 
 
-
 Memory memory;
 PCB beingSwapped;
 PCB currentlyIO;
@@ -188,8 +187,26 @@ void Svc(int &a, int p[])
 
 
 
-FILE _iob[] = { *stdin, *stdout, *stderr };
-extern "C" FILE * __cdecl __iob_func(void)
+
+extern "C" FILE* __cdecl __iob_func()
 {
-	return _iob;
+	struct _iobuf_VS2012 { // ...\Microsoft Visual Studio 11.0\VC\include\stdio.h #56
+		char *_ptr;
+		int   _cnt;
+		char *_base;
+		int   _flag;
+		int   _file;
+		int   _charbuf;
+		int   _bufsiz;
+		char *_tmpfname;
+	};
+	// VS2015 has only FILE = struct {void*}
+
+	int const count = sizeof(_iobuf_VS2012) / sizeof(FILE);
+
+	//// stdout
+	//return (FILE*)(&(__acrt_iob_func(1)->_Placeholder) - count);
+
+	// stderr
+	return (FILE*)(&(__acrt_iob_func(2)->_Placeholder) - 2 * count);
 }
