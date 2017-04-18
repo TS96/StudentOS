@@ -39,10 +39,14 @@ bool Memory::insertNewJob(PCB &newJob) {
 
 void Memory::mergeAdjacentSpaces() {
 	std::sort(FST.begin(), FST.end(), sortByAddress);
+	//printFST();
 	for (int i = 0; i < FST.size() - 1; i++) {
-		if (FST[i].first + FST[i].second == FST[i + 1].first) {
+		if (FST[i].first + FST[i].second + ((FST[i].first%10==0)?0:1) == FST[i + 1].first) {
+			//cout << FST[i].second << endl;
 			FST[i].second += FST[i + 1].second;
+			//cout << FST[i].second << endl;
 			FST.erase(FST.begin() + i + 1);
+			mergeAdjacentSpaces();
 		}
 	}
 	std::sort(FST.begin(), FST.end(), sortBySize);
@@ -54,7 +58,8 @@ bool Memory::deleteFromMemory(PCB &pcb) {
 	FST.push_back(pair<int, int>(pcb.getMemoryPos(), pcb.getJobSize()));
 	mergeAdjacentSpaces();
 	pcb.setMemoryPos(-1);
-	pop();
+	if(jobToBeKilled().getJobNumber()!=pcb.getJobNumber())
+		pop();
 	printFST();
 	return true;
 }
@@ -100,5 +105,19 @@ void Memory::push(PCB p) {
 
 int Memory::getCount() {
 	return jobs.size();
+}
+
+void Memory::blockJob() {
+	jobs.push(jobs.front());
+	jobs.pop();
+}
+
+void Memory::killAfterIO(PCB p) {
+	toBeKilled = p;
+	pop();
+}
+
+PCB Memory::jobToBeKilled() {
+	return toBeKilled;
 }
 

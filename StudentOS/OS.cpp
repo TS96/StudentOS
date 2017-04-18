@@ -8,23 +8,48 @@
 
 Memory memory;
 PCB beingSwapped;
+PCB currentlyIO;
 queue<PCB> LTS;
 bool swapping = false;
+bool swappingOut = false;
 void siodisk(int jobnum);
 void siodrum(int jobnum, int jobsize, int coreaddress, int direction);
 void ontrace(); // called without arguments
 void offtrace(); // called without arguments 
 
+
+void runFromLTS(int &a, int p[]) {
+	if (!LTS.empty()) {
+		PCB temp = LTS.front();
+		int memoryPos = memory.findMemPos(temp);
+		if (memoryPos != -1 && !swapping && !swappingOut) {
+			siodrum(temp.getJobNumber(), temp.getJobSize(), memoryPos, 0);
+			temp.setBlocked(false);
+			beingSwapped = temp;
+			swapping = true;
+			LTS.pop();
+		}
+		a = 1;
+	}
+	else
+		a = 1;
+}
+
+
 void runCurrentJob(int &a, int p[]) {
 	if (memory.getCount() != 0) {
-		p[2] = memory.getNextJob().getMemoryPos();;
+		p[2] = memory.getNextJob().getMemoryPos();
 		p[3] = memory.getNextJob().getJobSize();
 		p[4] = 1;
 		a = 2;
 	}
 	else
-		a = 1;  
+		runFromLTS(a, p);
 }
+
+
+
+
 
 void startup()
 {
@@ -66,9 +91,17 @@ void Dskint(int &a, int p[])
 	cout << "disk interrupt" << " " << a << endl;
 	// Disk interrupt.
 	// At call: p [5] = current time
-	memory.getNextJob().setDoingIO(false);
-	memory.getNextJob().setBlocked(false);
-	a = 2;
+	if (memory.jobToBeKilled().getJobNumber() == currentlyIO.getJobNumber()) {
+		cout << "killed it" << endl;
+		memory.deleteFromMemory(memory.jobToBeKilled());
+	}
+	if (memory.getCount() != 0) {
+		memory.getNextJob().setDoingIO(false);
+		memory.getNextJob().setBlocked(false);
+		a = 2;
+	}
+	else
+		a = 1;
 }
 void Drmint(int &a, int p[])
 {
@@ -79,27 +112,14 @@ void Drmint(int &a, int p[])
 		swapping = false;
 	}
 	else {
+		swappingOut = false;
 		if (memory.isEmpty()) {
-			if (!LTS.empty()) {
-				PCB temp = LTS.front();
-				int memoryPos = memory.findMemPos(temp);
-				if(memoryPos!=-1)
-					siodrum(temp.getJobNumber(), temp.getJobSize(), memoryPos, 0);
-				a = 1;
-				temp.setBlocked(false);
-				beingSwapped = temp;
-				swapping = true;
-				LTS.pop();
-				return;
-			}
-			else
-				a = 1;
+			runFromLTS(a, p);
 		}
 		else {
 			runCurrentJob(a, p);
 		}
 	}
-
 	// Drum interrupt.
 	// At call: p [5] = current time
 }
@@ -132,25 +152,36 @@ void Svc(int &a, int p[])
 	// a = 7 => job wants to be blocked until all its pending
 	// I/O requests are completed
 	if (a == 6) {
+		currentlyIO = memory.getNextJob();
 		siodisk(memory.getNextJob().getJobNumber());
 		memory.getNextJob().setDoingIO(true);
 		a = 2;
 	}
 	else if (a == 5) {
-		memory.deleteFromMemory(memory.getNextJob());
-		a = 1;
+		if (!memory.getNextJob().isDoingIO())
+			memory.deleteFromMemory(memory.getNextJob());
+		else
+			memory.killAfterIO(memory.getNextJob());
+		runCurrentJob(a, p);
 	}
 	else if(a==7) {
 		cout << "wating" << endl;
 		if (!memory.getNextJob().isDoingIO()) {
 			memory.getNextJob().setBlocked(true);
 			siodrum(memory.getNextJob().getJobNumber(), memory.getNextJob().getJobSize(), memory.getNextJob().getMemoryPos(), 1);
+			swappingOut = true;
 			LTS.push(memory.getNextJob());
 			memory.deleteFromMemory(memory.getNextJob());
 			runCurrentJob(a,p);
 		}
-		else
-			a = 1;
+		else {
+			if (memory.getCount() == 1)
+				runFromLTS(a,p);
+			else {
+				memory.blockJob();
+				runCurrentJob(a,p);
+			}
+		}
 
 	}
 }
