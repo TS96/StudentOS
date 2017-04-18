@@ -10,7 +10,8 @@ private:
 	vector<pair<int,int> > FST;
 	int findSpot(int);
 	queue<PCB> jobs;
-	PCB toBeKilled;
+	PCB jobDoingIO;
+	bool beKilled;
 public:
 	Memory();
 	bool insertNewJob(PCB &);
@@ -27,7 +28,9 @@ public:
 	int findMemPos(PCB);
 	void blockJob();
 	void killAfterIO(PCB);
-	PCB jobToBeKilled();
+	void setJobDoingIO(PCB);
+	PCB& getJobDoingIO();
+	bool shouldKill();
 };
 
 #endif
