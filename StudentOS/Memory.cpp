@@ -40,8 +40,6 @@ bool Memory::insertNewJob(PCB &newJob) {
 
 void Memory::mergeAdjacentSpaces() {
 	std::sort(FST.begin(), FST.end(), sortByAddress);
-	printFST();
-	cout << "Hello" << endl;
 	for (int i = 0; i < FST.size() - 1; i++) {
 		if (FST[i].first + FST[i].second == FST[i + 1].first) {
 			//cout << FST[i].second << endl;
