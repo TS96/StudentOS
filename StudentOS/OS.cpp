@@ -113,12 +113,7 @@ void Drmint(int &a, int p[])
 	}
 	else {
 		swappingOut = false;
-		if (memory.isEmpty()) {
-			runFromLTS(a, p);
-		}
-		else {
-			runCurrentJob(a, p);
-		}
+		runCurrentJob(a,p);
 	}
 	// Drum interrupt.
 	// At call: p [5] = current time

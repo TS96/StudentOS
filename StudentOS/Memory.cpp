@@ -40,14 +40,16 @@ bool Memory::insertNewJob(PCB &newJob) {
 
 void Memory::mergeAdjacentSpaces() {
 	std::sort(FST.begin(), FST.end(), sortByAddress);
-	//printFST();
+	printFST();
+	cout << "Hello" << endl;
 	for (int i = 0; i < FST.size() - 1; i++) {
-		if (FST[i].first + FST[i].second + ((FST[i].first%10==0)?0:1) == FST[i + 1].first) {
+		if (FST[i].first + FST[i].second == FST[i + 1].first) {
 			//cout << FST[i].second << endl;
 			FST[i].second += FST[i + 1].second;
 			//cout << FST[i].second << endl;
 			FST.erase(FST.begin() + i + 1);
-			mergeAdjacentSpaces();
+			//mergeAdjacentSpaces();
+			i = -1;
 		}
 	}
 	std::sort(FST.begin(), FST.end(), sortBySize);
