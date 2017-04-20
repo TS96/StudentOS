@@ -29,7 +29,7 @@ void swapOut(int &, int[], PCB *);
 
 void startup()
 {
-	ontrace();
+	//ontrace();
 	// Allows initialization of static system variables declared above.
 	// Called once at start of the simulation.
 }
@@ -40,7 +40,7 @@ void startup()
 // See RUNNING A JOB, below, for additional information
 void Crint(int &a, int p[])
 {
-	cout << "new job" << endl;
+	cout << "new job #" << p[1]<< endl;
 	// Indicates the arrival of a new job on the drum.
 	// At call: p [1] = job number
 	// p [2] = priority
@@ -49,8 +49,8 @@ void Crint(int &a, int p[])
 	// p [5] = current time
 	PCB* temp = new PCB(p[1], p[2], p[3], p[4], -1);
 	int memoryPos = memory.findMemPos(temp);
-	if (memoryPos != -1) {
-		swapIn(a, p, temp, memoryPos);
+	if (memoryPos != -1 && swapIn(a, p, temp, memoryPos)) {
+		cout << "swapped in new job #" << p[1] << endl;
 	}
 	else {
 		LTS.push(temp);
@@ -63,7 +63,7 @@ void Dskint(int &a, int p[])
 	// Disk interrupt.
 	// At call: p [5] = current time
 	doingIO = false;
-	if (memory.shouldKill()) {
+	if (IO.front()->shouldKill()) {
 		cout << "killed it" << endl;
 		memory.deleteFromMemory(IO.front());
 	}
@@ -110,6 +110,7 @@ void Svc(int &a, int p[])
 	cout << "svc request" << " " << a << endl;
 	if (a == 6) {		//needs IO
 		IO.push(memory.getNextJob());
+		memory.getNextJob()->setDoingIO(true);
 		runIO(a, p);
 		runCurrentJob(a, p);
 	}
@@ -165,7 +166,7 @@ void runCurrentJob(int &a, int p[]) {
 }
 
 void runFromLTS(int &a, int p[]) {
-	cout << "Run from LTS" << endl;
+	cout << "Run from LTS " << LTS.size()<< endl;
 	if (!LTS.empty()) {
 		PCB* temp = LTS.front();
 		int memoryPos = memory.findMemPos(temp);
@@ -182,7 +183,6 @@ void runFromLTS(int &a, int p[]) {
 void runIO(int &a, int p[]) {
 	if (!IO.empty() && !doingIO) {
 		doingIO = true;
-		IO.front()->setDoingIO(true);
 		memory.setJobDoingIO(IO.front());
 		siodisk(IO.front()->getJobNumber());
 	}

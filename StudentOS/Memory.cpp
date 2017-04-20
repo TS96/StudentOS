@@ -6,7 +6,6 @@
 Memory::Memory()
 {
 	FST.push_back(pair<int, int>(0, 100));
-	beKilled = false;
 }
 
 bool Memory::sortBySize(pair<int, int> left, pair<int, int> right) {
@@ -59,10 +58,8 @@ bool Memory::deleteFromMemory(PCB *pcb) {
 	FST.push_back(pair<int, int>(pcb->getMemoryPos(), pcb->getJobSize()));
 	mergeAdjacentSpaces();
 	pcb->setMemoryPos(-1);
-	if (!shouldKill())
+	if (!pcb->shouldKill())
 		pop();
-	else
-		beKilled = false;
 	printFST();
 	return true;
 }
@@ -112,14 +109,12 @@ int Memory::getCount() {
 
 void Memory::blockJob() {
 	jobs.front()->setBlocked(true);
-	jobDoingIO = jobs.front();
 	jobs.pop();
 }
 
 void Memory::killAfterIO(PCB* p) {
 	cout << "THIS HAPPENED!!!!!!!!!!!!!!!!!!!" << endl;
-	jobDoingIO = p;
-	beKilled = true;
+	p->setKillAfterIO(true);
 	pop();
 }
 
@@ -129,8 +124,4 @@ void Memory::setJobDoingIO(PCB* p) {
 
 PCB* Memory::getJobDoingIO() {
 	return jobDoingIO;
-}
-
-bool Memory::shouldKill() {
-	return beKilled;
 }

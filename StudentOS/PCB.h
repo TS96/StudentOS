@@ -12,6 +12,7 @@ class PCB
 	int cpuTime;
 	bool blocked;
 	bool doingIO;
+	bool killAfterIO;
 
 public:
 	PCB(int , int , int , int , int);
@@ -28,6 +29,8 @@ public:
 	bool isDoingIO();
 	void setBlocked(bool);
 	void setDoingIO(bool);
+	void setKillAfterIO(bool);
+	bool shouldKill();
 };
 
 #endif

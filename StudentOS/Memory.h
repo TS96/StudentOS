@@ -11,7 +11,6 @@ private:
 	int findSpot(int);
 	queue<PCB*> jobs;
 	PCB* jobDoingIO;
-	bool beKilled;
 public:
 	Memory();
 	bool insertNewJob(PCB *);
@@ -30,7 +29,6 @@ public:
 	void killAfterIO(PCB*);
 	void setJobDoingIO(PCB*);
 	PCB* getJobDoingIO();
-	bool shouldKill();
 };
 
 #endif

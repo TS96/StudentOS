@@ -7,11 +7,13 @@ PCB::PCB(int jobN, int pri, int jobS, int maxTime, int memPos) : jobNumber(jobN)
 	cpuTime = 0;
 	doingIO = false;
 	blocked = false;
+	killAfterIO = false;
 }
 PCB::PCB() {
 	jobNumber = priority = jobSize = maxCPUTime = memoryPos = -1;
 	cpuTime = 0;
 	doingIO = blocked = false;
+	killAfterIO = false;
 }
 
 int PCB::getJobNumber() {
@@ -62,3 +64,10 @@ void PCB::setDoingIO(bool status) {
 	doingIO = status;
 }
 
+void PCB::setKillAfterIO(bool status) {
+	killAfterIO = status;
+}
+
+bool PCB::shouldKill() {
+	return killAfterIO;
+}
