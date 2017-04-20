@@ -18,18 +18,18 @@ bool Memory::sortByAddress(pair<int, int> left, pair<int, int> right) {
 }
 
 
-bool Memory::insertNewJob(PCB &newJob) {
-	if (findSpot(newJob.getJobSize()) != -1) {
-		int i = findSpot(newJob.getJobSize());
+bool Memory::insertNewJob(PCB *newJob) {
+	if (findSpot(newJob->getJobSize()) != -1) {
+		int i = findSpot(newJob->getJobSize());
 		pair<int, int> oldSpace = FST[i];
-		if (oldSpace.second - newJob.getJobSize() != 0) {
-			FST[i].first = oldSpace.first + newJob.getJobSize();
-			FST[i].second = oldSpace.second - newJob.getJobSize();
+		if (oldSpace.second - newJob->getJobSize() != 0) {
+			FST[i].first = oldSpace.first + newJob->getJobSize();
+			FST[i].second = oldSpace.second - newJob->getJobSize();
 
 		}
 		else
 			FST.erase(FST.begin() + i);
-		newJob.setMemoryPos(oldSpace.first);
+		newJob->setMemoryPos(oldSpace.first);
 		jobs.push(newJob);
 	}
 	else 
@@ -53,12 +53,12 @@ void Memory::mergeAdjacentSpaces() {
 	std::sort(FST.begin(), FST.end(), sortBySize);
 }
 
-bool Memory::deleteFromMemory(PCB &pcb) {
-	if (pcb.getMemoryPos() == -1)
+bool Memory::deleteFromMemory(PCB *pcb) {
+	if (pcb->getMemoryPos() == -1)
 		return false;
-	FST.push_back(pair<int, int>(pcb.getMemoryPos(), pcb.getJobSize()));
+	FST.push_back(pair<int, int>(pcb->getMemoryPos(), pcb->getJobSize()));
 	mergeAdjacentSpaces();
-	pcb.setMemoryPos(-1);
+	pcb->setMemoryPos(-1);
 	if (!shouldKill())
 		pop();
 	else
@@ -75,8 +75,8 @@ int Memory::findSpot(int jobSize) {
 	return -1;
 }
 
-int Memory::findMemPos(PCB p) {
-	int i = findSpot(p.getJobSize());
+int Memory::findMemPos(PCB* p) {
+	int i = findSpot(p->getJobSize());
 	if (i != -1)
 		return FST[i].first;
 	return i;
@@ -88,7 +88,7 @@ void Memory::printFST() {
 	}
 }
 
-PCB & Memory::getNextJob() {
+PCB * Memory::getNextJob() {
 	if (jobs.empty())
 		NULL;
 	return jobs.front();
@@ -102,7 +102,7 @@ void Memory::pop() {
 	jobs.pop();
 }
 
-void Memory::push(PCB p) {
+void Memory::push(PCB* p) {
 	jobs.push(p);
 }
 
@@ -111,23 +111,23 @@ int Memory::getCount() {
 }
 
 void Memory::blockJob() {
-	jobs.front().setBlocked(true);
+	jobs.front()->setBlocked(true);
 	jobDoingIO = jobs.front();
 	jobs.pop();
 }
 
-void Memory::killAfterIO(PCB p) {
+void Memory::killAfterIO(PCB* p) {
 	cout << "THIS HAPPENED!!!!!!!!!!!!!!!!!!!" << endl;
 	jobDoingIO = p;
 	beKilled = true;
 	pop();
 }
 
-void Memory::setJobDoingIO(PCB p) {
+void Memory::setJobDoingIO(PCB* p) {
 	jobDoingIO = p;
 }
 
-PCB& Memory::getJobDoingIO() {
+PCB* Memory::getJobDoingIO() {
 	return jobDoingIO;
 }
 

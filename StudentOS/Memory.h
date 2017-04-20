@@ -9,27 +9,27 @@ class Memory
 private:
 	vector<pair<int,int> > FST;
 	int findSpot(int);
-	queue<PCB> jobs;
-	PCB jobDoingIO;
+	queue<PCB*> jobs;
+	PCB* jobDoingIO;
 	bool beKilled;
 public:
 	Memory();
-	bool insertNewJob(PCB &);
+	bool insertNewJob(PCB *);
 	void mergeAdjacentSpaces();
-	bool deleteFromMemory(PCB &);
+	bool deleteFromMemory(PCB *);
 	static bool sortBySize(pair<int, int>, pair<int, int>);
 	static bool sortByAddress(pair<int, int>, pair<int, int>);
 	void printFST();
-	PCB& getNextJob();
+	PCB* getNextJob();
 	bool isEmpty();
 	void pop();
-	void push(PCB);
+	void push(PCB*);
 	int getCount();
-	int findMemPos(PCB);
+	int findMemPos(PCB*);
 	void blockJob();
-	void killAfterIO(PCB);
-	void setJobDoingIO(PCB);
-	PCB& getJobDoingIO();
+	void killAfterIO(PCB*);
+	void setJobDoingIO(PCB*);
+	PCB* getJobDoingIO();
 	bool shouldKill();
 };
 
