@@ -16,6 +16,9 @@ bool Memory::sortByAddress(pair<int, int> left, pair<int, int> right) {
 	return left.first < right.first;
 }
 
+bool Memory::sortByMaxCPUTime(PCB* left, PCB* right) {
+	return left->getMaxCPUTime() > right->getMaxCPUTime();
+}
 
 bool Memory::insertNewJob(PCB *newJob) {
 	if (findSpot(newJob->getJobSize()) != -1) {
@@ -29,7 +32,8 @@ bool Memory::insertNewJob(PCB *newJob) {
 		else
 			FST.erase(FST.begin() + i);
 		newJob->setMemoryPos(oldSpace.first);
-		jobs.push(newJob);
+		jobs.push_back(newJob);
+		std::sort(jobs.begin(), jobs.end(), sortByMaxCPUTime);
 	}
 	else 
 		return false;
@@ -88,7 +92,7 @@ void Memory::printFST() {
 PCB * Memory::getNextJob() {
 	if (jobs.empty())
 		NULL;
-	return jobs.front();
+	return jobs.back();
 }
 
 bool Memory::isEmpty() {
@@ -96,11 +100,12 @@ bool Memory::isEmpty() {
 }
 
 void Memory::pop() {
-	jobs.pop();
+	jobs.pop_back();
 }
 
 void Memory::push(PCB* p) {
-	jobs.push(p);
+	jobs.push_back(p);
+	std::sort(jobs.begin(), jobs.end(), sortByMaxCPUTime);
 }
 
 int Memory::getCount() {
@@ -108,8 +113,8 @@ int Memory::getCount() {
 }
 
 void Memory::blockJob() {
-	jobs.front()->setBlocked(true);
-	jobs.pop();
+	jobs.back()->setBlocked(true);
+	jobs.pop_back();
 }
 
 void Memory::killAfterIO(PCB* p) {

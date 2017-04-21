@@ -9,7 +9,7 @@ class Memory
 private:
 	vector<pair<int,int> > FST;
 	int findSpot(int);
-	queue<PCB*> jobs;
+	vector<PCB*> jobs;
 	PCB* jobDoingIO;
 public:
 	Memory();
@@ -18,6 +18,7 @@ public:
 	bool deleteFromMemory(PCB *);
 	static bool sortBySize(pair<int, int>, pair<int, int>);
 	static bool sortByAddress(pair<int, int>, pair<int, int>);
+	static bool sortByMaxCPUTime(PCB*, PCB*);
 	void printFST();
 	PCB* getNextJob();
 	bool isEmpty();

@@ -3,7 +3,7 @@
 #include "Memory.h"
 #include <iostream>
 #include <queue>
-
+#include <vector>
 
 Memory memory;
 PCB* beingSwapped;
@@ -29,7 +29,7 @@ void swapOut(int &, int[], PCB *);
 
 void startup()
 {
-	//ontrace();
+	ontrace();
 	// Allows initialization of static system variables declared above.
 	// Called once at start of the simulation.
 }
@@ -40,6 +40,8 @@ void startup()
 // See RUNNING A JOB, below, for additional information
 void Crint(int &a, int p[])
 {
+	if (memory.getCount() + LTS.size() > 48)
+		return;
 	cout << "new job #" << p[1]<< endl;
 	// Indicates the arrival of a new job on the drum.
 	// At call: p [1] = job number
@@ -103,7 +105,7 @@ void Tro(int &a, int p[])
 		runCurrentJob(a,p);
 	}
 	else
-		a = 2;
+		runCurrentJob(a,p);
 }
 void Svc(int &a, int p[])
 {
