@@ -21,7 +21,7 @@ void runFromLTS(int &, int []);
 void runCurrentJob(int &, int []);
 void runIO(int &, int[]);
 bool swapIn(int &, int[], PCB *, int);
-void swapOut(int &, int[], PCB *);
+void swapOut(int &, int[]);
 
 
 
@@ -30,8 +30,6 @@ void swapOut(int &, int[], PCB *);
 void startup()
 {
 	ontrace();
-	// Allows initialization of static system variables declared above.
-	// Called once at start of the simulation.
 }
 
 // INTERRUPT HANDLERS
@@ -40,8 +38,6 @@ void startup()
 // See RUNNING A JOB, below, for additional information
 void Crint(int &a, int p[])
 {
-	if (memory.getCount() + LTS.size() > 48)
-		return;
 	cout << "new job #" << p[1]<< endl;
 	// Indicates the arrival of a new job on the drum.
 	// At call: p [1] = job number
@@ -56,14 +52,13 @@ void Crint(int &a, int p[])
 	}
 	else {
 		LTS.push(temp);
+		//std::sort(LTS.begin(), LTS.end(), memory.sortByMaxCPUTime);
 	}
 	runCurrentJob(a, p);
 }
 void Dskint(int &a, int p[])
 {
 	cout << "disk interrupt" << " " << a << endl;
-	// Disk interrupt.
-	// At call: p [5] = current time
 	doingIO = false;
 	if (IO.front()->shouldKill()) {
 		cout << "killed it" << endl;
@@ -90,9 +85,9 @@ void Drmint(int &a, int p[])
 	else {
 		swappingOut = false;
 	}
+	runIO(a, p);
+	swapOut(a, p);
 	runCurrentJob(a, p);
-	// Drum interrupt.
-	// At call: p [5] = current time
 }
 void Tro(int &a, int p[])
 {
@@ -101,35 +96,46 @@ void Tro(int &a, int p[])
 	memory.getNextJob()->addCPUTime(p[4]);
 	if (memory.getNextJob()->getCPUTime() >= memory.getNextJob()->getMaxCPUTime()) {
 		cout << "ran out of time" << endl;
-		memory.deleteFromMemory(memory.getNextJob());
-		runCurrentJob(a,p);
+		if (memory.getNextJob()->isDoingIO()) {
+			cout << "Will kill it" << endl;
+			memory.killAfterIO(memory.getNextJob());
+		}
+		else
+		{
+			memory.deleteFromMemory(memory.getNextJob());
+		}
 	}
-	else
-		runCurrentJob(a,p);
+	runCurrentJob(a,p);
 }
 void Svc(int &a, int p[])
 {
 	cout << "svc request" << " " << a << endl;
 	if (a == 6) {		//needs IO
+		memory.getNextJob()->incrementPendingIO();
 		IO.push(memory.getNextJob());
-		memory.getNextJob()->setDoingIO(true);
 		runIO(a, p);
-		runCurrentJob(a, p);
 	}
 	else if (a == 5) {		//terminated
 		if (!memory.getNextJob()->isDoingIO())
 			memory.deleteFromMemory(memory.getNextJob());
-		else
+		else {
+			cout << "Will kill it" << endl;
 			memory.killAfterIO(memory.getNextJob());
-		runCurrentJob(a, p);
+		}
 	}
 	else if(a==7) {			//block
 		if (memory.getNextJob()->isDoingIO()) {
 			cout << "Doing IO" << endl;
 			memory.blockJob();
 		}
-		runCurrentJob(a, p);
+		else
+			if (memory.getNextJob()->getPendingIO()>0) {
+				swapOutQ.push(memory.getNextJob());
+				swapOut(a, p);
+				memory.pop();
+			}
 	}
+	runCurrentJob(a, p);
 }
 
 
@@ -143,21 +149,19 @@ bool swapIn(int &a, int p[], PCB *temp, int memoryPos) {
 	return false;
 }
 
-void swapOut(int &a, int p[], PCB *pcb) {
-	if (!swappingIn && !swappingOut) {
-		pcb->setBlocked(true);
-		siodrum(pcb->getJobNumber(), pcb->getJobSize(), pcb->getMemoryPos(), 1);
+void swapOut(int &a, int p[]) {
+	if (!swappingIn && !swappingOut && !swapOutQ.empty()) {
+		swapOutQ.front()->setBlocked(true);
+		siodrum(swapOutQ.front()->getJobNumber(), swapOutQ.front()->getJobSize(), swapOutQ.front()->getMemoryPos(), 1);
 		swappingOut = true;
-		memory.deleteFromMemory(pcb);
-	}
-	else {
-		swapOutQ.push(pcb);
-		memory.pop();
+		memory.deleteFromMemory(swapOutQ.front());
+		swapOutQ.pop();
 	}
 }
 
 void runCurrentJob(int &a, int p[]) {
 	if (!memory.isEmpty()) {
+		cout << memory.getNextJob()->getJobNumber() << endl << memory.getNextJob()->getMemoryPos() << endl << memory.getNextJob()->getJobSize() << endl;
 		p[2] = memory.getNextJob()->getMemoryPos();
 		p[3] = memory.getNextJob()->getJobSize();
 		p[4] = 1;
@@ -165,7 +169,7 @@ void runCurrentJob(int &a, int p[]) {
 	}
 	else
 		runFromLTS(a, p);
-}
+}	
 
 void runFromLTS(int &a, int p[]) {
 	cout << "Run from LTS " << LTS.size()<< endl;
@@ -173,8 +177,8 @@ void runFromLTS(int &a, int p[]) {
 		PCB* temp = LTS.front();
 		int memoryPos = memory.findMemPos(temp);
 		if (memoryPos != -1) {
-			swapIn(a, p, temp, memoryPos);
-			LTS.pop();
+			if(swapIn(a, p, temp, memoryPos))
+				LTS.pop();
 		}
 		a = 1;
 	}
@@ -184,9 +188,17 @@ void runFromLTS(int &a, int p[]) {
 
 void runIO(int &a, int p[]) {
 	if (!IO.empty() && !doingIO) {
-		doingIO = true;
-		memory.setJobDoingIO(IO.front());
-		siodisk(IO.front()->getJobNumber());
+		if (IO.front()->isInMemory()) {
+			doingIO = true;
+			memory.getNextJob()->setDoingIO(true);
+			memory.setJobDoingIO(IO.front());
+			siodisk(IO.front()->getJobNumber());
+		}
+		else {
+			int memoryPos = memory.findMemPos(IO.front());
+			if (memoryPos != -1) 
+				swapIn(a, p, IO.front(), memoryPos);
+		}
 	}
 }
 

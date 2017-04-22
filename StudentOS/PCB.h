@@ -10,9 +10,11 @@ class PCB
 	int maxCPUTime;
 	int memoryPos;
 	int cpuTime;
+	int pendingIO;
 	bool blocked;
 	bool doingIO;
 	bool killAfterIO;
+	bool inMemory;
 
 public:
 	PCB(int , int , int , int , int);
@@ -31,6 +33,10 @@ public:
 	void setDoingIO(bool);
 	void setKillAfterIO(bool);
 	bool shouldKill();
+	int getPendingIO();
+	void incrementPendingIO();
+	bool isInMemory();
+	void setInMemory(bool);
 };
 
 #endif

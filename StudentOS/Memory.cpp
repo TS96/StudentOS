@@ -20,24 +20,37 @@ bool Memory::sortByMaxCPUTime(PCB* left, PCB* right) {
 	return left->getMaxCPUTime() > right->getMaxCPUTime();
 }
 
-bool Memory::insertNewJob(PCB *newJob) {
-	if (findSpot(newJob->getJobSize()) != -1) {
-		int i = findSpot(newJob->getJobSize());
-		pair<int, int> oldSpace = FST[i];
-		if (oldSpace.second - newJob->getJobSize() != 0) {
-			FST[i].first = oldSpace.first + newJob->getJobSize();
-			FST[i].second = oldSpace.second - newJob->getJobSize();
+bool Memory::sortByPCBSize(PCB* left, PCB* right) {
+	return left->getJobSize() > right->getJobSize();
+}
 
-		}
-		else
-			FST.erase(FST.begin() + i);
-		newJob->setMemoryPos(oldSpace.first);
-		jobs.push_back(newJob);
-		std::sort(jobs.begin(), jobs.end(), sortByMaxCPUTime);
-	}
-	else 
+bool Memory::insertNewJob(PCB *newJob) {
+	int i = findSpot(newJob);
+	if (i == -1)
 		return false;
-	std::sort(FST.begin(), FST.end(), sortBySize);
+	pair<int, int> oldSpace = FST[i];
+	if (oldSpace.first == newJob->getMemoryPos()) {
+			if (oldSpace.second - newJob->getJobSize() != 0) {
+				FST[i].first = oldSpace.first + newJob->getJobSize();
+				FST[i].second = oldSpace.second - newJob->getJobSize();
+			}
+			else
+				FST.erase(FST.begin() + i);
+	}
+	else {
+		int orgSize = FST[i].second;
+		FST[i].second = newJob->getMemoryPos() - FST[i].first;
+		pair<int, int> p;
+		p.first = newJob->getMemoryPos() + newJob->getJobSize() + 1;
+		p.second = orgSize - FST[i].second - newJob->getJobSize();
+		if (p.second > 0)
+			FST.push_back(p);
+	}
+	newJob->setInMemory(true);
+	if (!newJob->isBlocked())
+		jobs.push_back(newJob);
+	std::sort(jobs.begin(), jobs.end(), sortByMaxCPUTime);
+	mergeAdjacentSpaces();
 	return true;
 }
 
@@ -45,11 +58,8 @@ void Memory::mergeAdjacentSpaces() {
 	std::sort(FST.begin(), FST.end(), sortByAddress);
 	for (int i = 0; i < FST.size() - 1; i++) {
 		if (FST[i].first + FST[i].second == FST[i + 1].first) {
-			//cout << FST[i].second << endl;
 			FST[i].second += FST[i + 1].second;
-			//cout << FST[i].second << endl;
 			FST.erase(FST.begin() + i + 1);
-			//mergeAdjacentSpaces();
 			i = -1;
 		}
 	}
@@ -62,24 +72,27 @@ bool Memory::deleteFromMemory(PCB *pcb) {
 	FST.push_back(pair<int, int>(pcb->getMemoryPos(), pcb->getJobSize()));
 	mergeAdjacentSpaces();
 	pcb->setMemoryPos(-1);
-	if (!pcb->shouldKill())
+	pcb->setInMemory(false);
+	if (!pcb->shouldKill() && !(pcb->getPendingIO() > 0))
 		pop();
 	printFST();
 	return true;
 }
 
-int Memory::findSpot(int jobSize) {
+int Memory::findSpot(PCB* job) {
 	for (int i = 0; i < FST.size(); i++)
-		if (FST[i].second >= jobSize) {
+		if (FST[i].second >= job->getJobSize()) {
 			return i;
 		}
 	return -1;
 }
 
 int Memory::findMemPos(PCB* p) {
-	int i = findSpot(p->getJobSize());
-	if (i != -1)
+	int i = findSpot(p);
+	if (i != -1) {
+		p->setMemoryPos(FST[i].first);
 		return FST[i].first;
+	}
 	return i;
 }
 
