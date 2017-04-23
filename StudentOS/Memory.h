@@ -20,6 +20,7 @@ public:
 	static bool sortByAddress(pair<int, int>, pair<int, int>);
 	static bool sortByMaxCPUTime(PCB*, PCB*);
 	static bool sortByPCBSize(PCB*, PCB*);
+	static bool sortIO(PCB*, PCB*);
 	void printFST();
 	PCB* getNextJob();
 	bool isEmpty();

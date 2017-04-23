@@ -8,7 +8,7 @@
 Memory memory;
 PCB* beingSwapped;
 queue<PCB*> LTS;
-queue<PCB*> IO;
+vector<PCB*> IO;
 queue<PCB*> swapOutQ;
 bool swappingIn = false;
 bool swappingOut = false;
@@ -22,6 +22,8 @@ void runCurrentJob(int &, int []);
 void runIO(int &, int[]);
 bool swapIn(int &, int[], PCB *, int);
 void swapOut(int &, int[]);
+void swapFromLTS(int &, int[]);
+
 
 
 
@@ -60,18 +62,17 @@ void Dskint(int &a, int p[])
 {
 	cout << "disk interrupt" << " " << a << endl;
 	doingIO = false;
-	if (IO.front()->shouldKill()) {
+	if (memory.getJobDoingIO()->shouldKill()) {
 		cout << "killed it" << endl;
-		memory.deleteFromMemory(IO.front());
+		memory.deleteFromMemory(memory.getJobDoingIO());
 	}
-	else if (IO.front()->isBlocked()) {
-		IO.front()->setBlocked(false);
-		IO.front()->setDoingIO(false);
-		memory.push(IO.front());
+	else if (memory.getJobDoingIO()->isBlocked()) {
+		memory.getJobDoingIO()->setBlocked(false);
+		memory.getJobDoingIO()->setDoingIO(false);
+		memory.push(memory.getJobDoingIO());
 	}
 	else
-		IO.front()->setDoingIO(false);
-	IO.pop();
+		memory.getJobDoingIO()->setDoingIO(false);
 	runCurrentJob(a, p);
 	runIO(a, p);
 }
@@ -85,7 +86,11 @@ void Drmint(int &a, int p[])
 	else {
 		swappingOut = false;
 	}
+	cout << "YO" << endl;
+	memory.printFST();
+	cout << "YO" << endl;
 	runIO(a, p);
+	swapFromLTS(a, p);
 	swapOut(a, p);
 	runCurrentJob(a, p);
 }
@@ -96,7 +101,7 @@ void Tro(int &a, int p[])
 	memory.getNextJob()->addCPUTime(p[4]);
 	if (memory.getNextJob()->getCPUTime() >= memory.getNextJob()->getMaxCPUTime()) {
 		cout << "ran out of time" << endl;
-		if (memory.getNextJob()->isDoingIO()) {
+		if (memory.getNextJob()->isDoingIO() || memory.getNextJob()->getPendingIO() > 0) {
 			cout << "Will kill it" << endl;
 			memory.killAfterIO(memory.getNextJob());
 		}
@@ -112,11 +117,11 @@ void Svc(int &a, int p[])
 	cout << "svc request" << " " << a << endl;
 	if (a == 6) {		//needs IO
 		memory.getNextJob()->incrementPendingIO();
-		IO.push(memory.getNextJob());
+		IO.push_back(memory.getNextJob());
 		runIO(a, p);
 	}
 	else if (a == 5) {		//terminated
-		if (!memory.getNextJob()->isDoingIO())
+		if (!memory.getNextJob()->isDoingIO() && memory.getNextJob()->getPendingIO()==0)
 			memory.deleteFromMemory(memory.getNextJob());
 		else {
 			cout << "Will kill it" << endl;
@@ -130,6 +135,7 @@ void Svc(int &a, int p[])
 		}
 		else
 			if (memory.getNextJob()->getPendingIO()>0) {
+				memory.getNextJob()->setBlocked(true);
 				swapOutQ.push(memory.getNextJob());
 				swapOut(a, p);
 				memory.pop();
@@ -141,6 +147,9 @@ void Svc(int &a, int p[])
 
 bool swapIn(int &a, int p[], PCB *temp, int memoryPos) {
 	if (!swappingIn && !swappingOut) {
+		cout << "YO" << endl;
+		memory.printFST();
+		cout << "YO" << endl;
 		siodrum(temp->getJobNumber(), temp->getJobSize(), memoryPos, 0);
 		swappingIn = true;
 		beingSwapped = temp;
@@ -151,6 +160,10 @@ bool swapIn(int &a, int p[], PCB *temp, int memoryPos) {
 
 void swapOut(int &a, int p[]) {
 	if (!swappingIn && !swappingOut && !swapOutQ.empty()) {
+		if (swapOutQ.front()->isDoingIO() || swapOutQ.front()->getPendingIO()==0) {
+			swapOutQ.pop();
+			return;
+		}
 		swapOutQ.front()->setBlocked(true);
 		siodrum(swapOutQ.front()->getJobNumber(), swapOutQ.front()->getJobSize(), swapOutQ.front()->getMemoryPos(), 1);
 		swappingOut = true;
@@ -161,7 +174,7 @@ void swapOut(int &a, int p[]) {
 
 void runCurrentJob(int &a, int p[]) {
 	if (!memory.isEmpty()) {
-		cout << memory.getNextJob()->getJobNumber() << endl << memory.getNextJob()->getMemoryPos() << endl << memory.getNextJob()->getJobSize() << endl;
+		//cout << memory.getNextJob()->getJobNumber() << endl << memory.getNextJob()->getMemoryPos() << endl << memory.getNextJob()->getJobSize() << endl;
 		p[2] = memory.getNextJob()->getMemoryPos();
 		p[3] = memory.getNextJob()->getJobSize();
 		p[4] = 1;
@@ -186,18 +199,32 @@ void runFromLTS(int &a, int p[]) {
 		a = 1;
 }
 
+void swapFromLTS(int &a, int p[]) {
+	if (!LTS.empty()) {
+		PCB* temp = LTS.front();
+		int memoryPos = memory.findMemPos(temp);
+		if (memoryPos != -1) {
+			if (swapIn(a, p, temp, memoryPos))
+				LTS.pop();
+		}
+	}
+}
+
 void runIO(int &a, int p[]) {
+	std::sort(IO.begin(), IO.end(), memory.sortIO);
+	cout << IO.size() << " " << doingIO << endl;
 	if (!IO.empty() && !doingIO) {
-		if (IO.front()->isInMemory()) {
+		if (IO.back()->isInMemory()) {
 			doingIO = true;
-			memory.getNextJob()->setDoingIO(true);
-			memory.setJobDoingIO(IO.front());
-			siodisk(IO.front()->getJobNumber());
+			IO.back()->setDoingIO(true);
+			memory.setJobDoingIO(IO.back());
+			siodisk(IO.back()->getJobNumber());
+			IO.pop_back();
 		}
 		else {
-			int memoryPos = memory.findMemPos(IO.front());
+			int memoryPos = memory.findMemPos(IO.back());
 			if (memoryPos != -1) 
-				swapIn(a, p, IO.front(), memoryPos);
+				swapIn(a, p, IO.back(), memoryPos);
 		}
 	}
 }

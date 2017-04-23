@@ -24,28 +24,36 @@ bool Memory::sortByPCBSize(PCB* left, PCB* right) {
 	return left->getJobSize() > right->getJobSize();
 }
 
+bool Memory::sortIO(PCB* left, PCB* right) {
+	return left->isInMemory() < right->isInMemory();
+}
+
 bool Memory::insertNewJob(PCB *newJob) {
 	int i = findSpot(newJob);
 	if (i == -1)
 		return false;
+	while (!(FST[i].first <= newJob->getMemoryPos()) || !(FST[i].first + FST[i].second >= newJob->getMemoryPos() + newJob->getJobSize()))
+		i++;
 	pair<int, int> oldSpace = FST[i];
 	if (oldSpace.first == newJob->getMemoryPos()) {
 			if (oldSpace.second - newJob->getJobSize() != 0) {
 				FST[i].first = oldSpace.first + newJob->getJobSize();
 				FST[i].second = oldSpace.second - newJob->getJobSize();
 			}
-			else
+			else {
 				FST.erase(FST.begin() + i);
+			}
 	}
 	else {
 		int orgSize = FST[i].second;
 		FST[i].second = newJob->getMemoryPos() - FST[i].first;
 		pair<int, int> p;
-		p.first = newJob->getMemoryPos() + newJob->getJobSize() + 1;
+		p.first = newJob->getMemoryPos() + newJob->getJobSize();
 		p.second = orgSize - FST[i].second - newJob->getJobSize();
 		if (p.second > 0)
 			FST.push_back(p);
 	}
+
 	newJob->setInMemory(true);
 	if (!newJob->isBlocked())
 		jobs.push_back(newJob);
@@ -55,6 +63,8 @@ bool Memory::insertNewJob(PCB *newJob) {
 }
 
 void Memory::mergeAdjacentSpaces() {
+	if (FST.size() < 2)
+		return;
 	std::sort(FST.begin(), FST.end(), sortByAddress);
 	for (int i = 0; i < FST.size() - 1; i++) {
 		if (FST[i].first + FST[i].second == FST[i + 1].first) {
