@@ -25,7 +25,10 @@ bool Memory::sortByPCBSize(PCB* left, PCB* right) {
 }
 
 bool Memory::sortIO(PCB* left, PCB* right) {
-	return left->isInMemory() < right->isInMemory();
+	if (left->isInMemory() && right->isInMemory())
+		return left->getJobSize() > right->getJobSize();
+	else
+		return left->isInMemory() < right->isInMemory();
 }
 
 bool Memory::insertNewJob(PCB *newJob) {
