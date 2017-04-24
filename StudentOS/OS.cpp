@@ -7,7 +7,7 @@
 
 Memory memory;
 PCB* beingSwapped;
-queue<PCB*> LTS;
+vector<PCB*> LTS;
 vector<PCB*> IO;
 queue<PCB*> swapOutQ;
 bool swappingIn = false;
@@ -53,7 +53,7 @@ void Crint(int &a, int p[])
 		cout << "swapped in new job #" << p[1] << endl;
 	}
 	else {
-		LTS.push(temp);
+		LTS.push_back(temp);
 		//std::sort(LTS.begin(), LTS.end(), memory.sortByMaxCPUTime);
 	}
 	runCurrentJob(a, p);
@@ -136,6 +136,7 @@ void Svc(int &a, int p[])
 		else
 			if (memory.getNextJob()->getPendingIO()>0) {
 				memory.getNextJob()->setBlocked(true);
+				cout << "PUSHED INTO SWAP **********************************************************" << endl << endl;
 				swapOutQ.push(memory.getNextJob());
 				swapOut(a, p);
 				memory.pop();
@@ -160,7 +161,7 @@ bool swapIn(int &a, int p[], PCB *temp, int memoryPos) {
 
 void swapOut(int &a, int p[]) {
 	if (!swappingIn && !swappingOut && !swapOutQ.empty()) {
-		if (swapOutQ.front()->isDoingIO() || swapOutQ.front()->getPendingIO()==0) {
+		if (swapOutQ.front()->isDoingIO() || swapOutQ.front()->getPendingIO()==0 || !swapOutQ.front()->isInMemory()) {
 			swapOutQ.pop();
 			return;
 		}
@@ -186,26 +187,18 @@ void runCurrentJob(int &a, int p[]) {
 
 void runFromLTS(int &a, int p[]) {
 	cout << "Run from LTS " << LTS.size()<< endl;
-	if (!LTS.empty()) {
-		PCB* temp = LTS.front();
-		int memoryPos = memory.findMemPos(temp);
-		if (memoryPos != -1) {
-			if(swapIn(a, p, temp, memoryPos))
-				LTS.pop();
-		}
-		a = 1;
-	}
-	else
-		a = 1;
+	swapFromLTS(a, p);
+	a = 1;
 }
 
 void swapFromLTS(int &a, int p[]) {
 	if (!LTS.empty()) {
-		PCB* temp = LTS.front();
+		std::sort(LTS.begin(), LTS.end(), memory.sortByMaxCPUTime);
+		PCB* temp = LTS.back();
 		int memoryPos = memory.findMemPos(temp);
 		if (memoryPos != -1) {
 			if (swapIn(a, p, temp, memoryPos))
-				LTS.pop();
+				LTS.pop_back();
 		}
 	}
 }
