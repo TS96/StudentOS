@@ -19,6 +19,7 @@ class PCB
 public:
 	PCB(int , int , int , int , int);
 	PCB();
+	~PCB();
 	int getJobNumber();
 	int getPriority();
 	int getJobSize();

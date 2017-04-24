@@ -136,7 +136,6 @@ void Svc(int &a, int p[])
 		else
 			if (memory.getNextJob()->getPendingIO()>0) {
 				memory.getNextJob()->setBlocked(true);
-				cout << "PUSHED INTO SWAP **********************************************************" << endl << endl;
 				swapOutQ.push(memory.getNextJob());
 				swapOut(a, p);
 				memory.pop();

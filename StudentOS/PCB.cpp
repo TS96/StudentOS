@@ -20,6 +20,10 @@ PCB::PCB() {
 	inMemory = false;
 }
 
+PCB::~PCB() {
+
+}
+
 int PCB::getJobNumber() {
 	return jobNumber;
 }
@@ -93,3 +97,4 @@ bool PCB::isInMemory() {
 void PCB::setInMemory(bool status) {
 	inMemory = status;
 }
+

@@ -86,8 +86,12 @@ bool Memory::deleteFromMemory(PCB *pcb) {
 	mergeAdjacentSpaces();
 	pcb->setMemoryPos(-1);
 	pcb->setInMemory(false);
-	if (!pcb->shouldKill() && !(pcb->getPendingIO() > 0))
+	if (!pcb->shouldKill() && !(pcb->getPendingIO() > 0)) {
 		pop();
+		delete pcb;
+	}
+	else if (pcb->shouldKill())
+		delete pcb;
 	printFST();
 	return true;
 }
@@ -144,7 +148,6 @@ void Memory::blockJob() {
 }
 
 void Memory::killAfterIO(PCB* p) {
-	cout << "THIS HAPPENED!!!!!!!!!!!!!!!!!!!" << endl;
 	p->setKillAfterIO(true);
 	pop();
 }
