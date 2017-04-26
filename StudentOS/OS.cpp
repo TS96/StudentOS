@@ -25,12 +25,6 @@ void swapOut(int &, int[]);
 void swapFromLTS(int &, int[]);
 
 
-/*LTS is sorted so when you try to swap in a job for IO and you get -1 because memory is full
-you sort jobs in ascending order then you swap the biggest one out and delete it from memory. When that's done,
-run IO gets called and you swap the job at the top and BAM!
-*/
-
-
 void startup()
 {
 	ontrace();
@@ -97,7 +91,7 @@ void Tro(int &a, int p[])
 {
 	// Timer-Run-Out.
 	// At call: p [5] = current time
-	memory.getNextJob()->addCPUTime(p[4]);
+	memory.getNextJob()->addCPUTime(p[5] - memory.getNextJob()->getPrevClock());
 	if (memory.getNextJob()->getCPUTime() >= memory.getNextJob()->getMaxCPUTime()) {
 		cout << "ran out of time" << endl;
 		if (memory.getNextJob()->isDoingIO() || memory.getNextJob()->getPendingIO() > 0) {
@@ -180,6 +174,7 @@ void runCurrentJob(int &a, int p[]) {
 		p[3] = memory.getNextJob()->getJobSize();
 		p[4] = 1;
 		a = 2;
+		memory.getNextJob()->setPrevClock(p[5]);
 	}
 	else
 		runFromLTS(a, p);

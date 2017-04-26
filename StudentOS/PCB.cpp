@@ -11,6 +11,7 @@ PCB::PCB(int jobN, int pri, int jobS, int maxTime, int memPos) : jobNumber(jobN)
 	pendingIO = 0;
 	inMemory = false;
 	tooBig = false;
+	prevClock = 0;
 }
 PCB::PCB() {
 	jobNumber = priority = jobSize = maxCPUTime = memoryPos = -1;
@@ -20,6 +21,7 @@ PCB::PCB() {
 	pendingIO = 0;
 	inMemory = false;
 	tooBig = false;
+	prevClock = 0;
 }
 
 PCB::~PCB() {
@@ -106,5 +108,13 @@ bool PCB::isTooBig() {
 
 void PCB::setTooBig(bool status) {
 	tooBig = status;
+}
+
+void PCB::setPrevClock(int n) {
+	prevClock = n;
+}
+
+int PCB::getPrevClock() {
+	return prevClock;
 }
 

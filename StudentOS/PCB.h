@@ -16,7 +16,7 @@ class PCB
 	bool killAfterIO;
 	bool inMemory;
 	bool tooBig;
-
+	int prevClock;
 public:
 	PCB(int , int , int , int , int);
 	PCB();
@@ -41,6 +41,8 @@ public:
 	void setInMemory(bool);
 	bool isTooBig();
 	void setTooBig(bool);
+	int getPrevClock();
+	void setPrevClock(int);
 };
 
 #endif
