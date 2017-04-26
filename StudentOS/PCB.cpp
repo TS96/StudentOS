@@ -10,6 +10,7 @@ PCB::PCB(int jobN, int pri, int jobS, int maxTime, int memPos) : jobNumber(jobN)
 	killAfterIO = false;
 	pendingIO = 0;
 	inMemory = false;
+	tooBig = false;
 }
 PCB::PCB() {
 	jobNumber = priority = jobSize = maxCPUTime = memoryPos = -1;
@@ -18,6 +19,7 @@ PCB::PCB() {
 	killAfterIO = false;
 	pendingIO = 0;
 	inMemory = false;
+	tooBig = false;
 }
 
 PCB::~PCB() {
@@ -96,5 +98,13 @@ bool PCB::isInMemory() {
 
 void PCB::setInMemory(bool status) {
 	inMemory = status;
+}
+
+bool PCB::isTooBig() {
+	return tooBig;
+}
+
+void PCB::setTooBig(bool status) {
+	tooBig = status;
 }
 

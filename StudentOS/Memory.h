@@ -21,6 +21,7 @@ public:
 	static bool sortByMaxCPUTime(PCB*, PCB*);
 	static bool sortByPCBSize(PCB*, PCB*);
 	static bool sortIO(PCB*, PCB*);
+	static bool sortByLeastCPUTime(PCB*, PCB*);
 	void printFST();
 	PCB* getNextJob();
 	bool isEmpty();
@@ -32,6 +33,7 @@ public:
 	void killAfterIO(PCB*);
 	void setJobDoingIO(PCB*);
 	PCB* getJobDoingIO();
+	PCB* findLargestJob();
 };
 
 #endif

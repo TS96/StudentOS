@@ -25,8 +25,10 @@ void swapOut(int &, int[]);
 void swapFromLTS(int &, int[]);
 
 
-
-
+/*LTS is sorted so when you try to swap in a job for IO and you get -1 because memory is full
+you sort jobs in ascending order then you swap the biggest one out and delete it from memory. When that's done,
+run IO gets called and you swap the job at the top and BAM!
+*/
 
 
 void startup()
@@ -54,7 +56,7 @@ void Crint(int &a, int p[])
 	}
 	else {
 		LTS.push_back(temp);
-		//std::sort(LTS.begin(), LTS.end(), memory.sortByMaxCPUTime);
+		std::sort(LTS.begin(), LTS.end(), memory.sortByMaxCPUTime);
 	}
 	runCurrentJob(a, p);
 }
@@ -73,8 +75,8 @@ void Dskint(int &a, int p[])
 	}
 	else
 		memory.getJobDoingIO()->setDoingIO(false);
-	runCurrentJob(a, p);
 	runIO(a, p);
+	runCurrentJob(a, p);
 }
 void Drmint(int &a, int p[])
 {
@@ -86,9 +88,6 @@ void Drmint(int &a, int p[])
 	else {
 		swappingOut = false;
 	}
-	cout << "YO" << endl;
-	memory.printFST();
-	cout << "YO" << endl;
 	runIO(a, p);
 	swapFromLTS(a, p);
 	swapOut(a, p);
@@ -147,9 +146,6 @@ void Svc(int &a, int p[])
 
 bool swapIn(int &a, int p[], PCB *temp, int memoryPos) {
 	if (!swappingIn && !swappingOut) {
-		cout << "YO" << endl;
-		memory.printFST();
-		cout << "YO" << endl;
 		siodrum(temp->getJobNumber(), temp->getJobSize(), memoryPos, 0);
 		swappingIn = true;
 		beingSwapped = temp;
@@ -160,7 +156,7 @@ bool swapIn(int &a, int p[], PCB *temp, int memoryPos) {
 
 void swapOut(int &a, int p[]) {
 	if (!swappingIn && !swappingOut && !swapOutQ.empty()) {
-		if (swapOutQ.front()->isDoingIO() || swapOutQ.front()->getPendingIO()==0 || !swapOutQ.front()->isInMemory()) {
+		if ((swapOutQ.front()->isDoingIO() || swapOutQ.front()->getPendingIO()==0 || !swapOutQ.front()->isInMemory()) && !swapOutQ.front()->isTooBig()) {
 			swapOutQ.pop();
 			return;
 		}
@@ -168,6 +164,11 @@ void swapOut(int &a, int p[]) {
 		siodrum(swapOutQ.front()->getJobNumber(), swapOutQ.front()->getJobSize(), swapOutQ.front()->getMemoryPos(), 1);
 		swappingOut = true;
 		memory.deleteFromMemory(swapOutQ.front());
+		if (swapOutQ.front()->isTooBig()) {
+			swapOutQ.front()->setTooBig(false);
+			swapOutQ.front()->setBlocked(false);
+			LTS.push_back(swapOutQ.front());
+		}
 		swapOutQ.pop();
 	}
 }
@@ -192,7 +193,6 @@ void runFromLTS(int &a, int p[]) {
 
 void swapFromLTS(int &a, int p[]) {
 	if (!LTS.empty()) {
-		std::sort(LTS.begin(), LTS.end(), memory.sortByMaxCPUTime);
 		PCB* temp = LTS.back();
 		int memoryPos = memory.findMemPos(temp);
 		if (memoryPos != -1) {
@@ -217,6 +217,15 @@ void runIO(int &a, int p[]) {
 			int memoryPos = memory.findMemPos(IO.back());
 			if (memoryPos != -1) 
 				swapIn(a, p, IO.back(), memoryPos);
+			else {
+				if (swapOutQ.empty() && !swappingIn && !swappingOut) {
+					PCB* temp = memory.findLargestJob();
+					cout << "Swapout #" << temp->getJobNumber() << "  " << memoryPos << endl;
+					swapOutQ.push(temp);
+					swapOut(a, p);
+
+				}
+			}
 		}
 	}
 }

@@ -15,6 +15,7 @@ class PCB
 	bool doingIO;
 	bool killAfterIO;
 	bool inMemory;
+	bool tooBig;
 
 public:
 	PCB(int , int , int , int , int);
@@ -38,6 +39,8 @@ public:
 	void incrementPendingIO();
 	bool isInMemory();
 	void setInMemory(bool);
+	bool isTooBig();
+	void setTooBig(bool);
 };
 
 #endif

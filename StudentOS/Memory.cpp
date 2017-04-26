@@ -16,8 +16,15 @@ bool Memory::sortByAddress(pair<int, int> left, pair<int, int> right) {
 	return left.first < right.first;
 }
 
+//least at the end
 bool Memory::sortByMaxCPUTime(PCB* left, PCB* right) {
 	return left->getMaxCPUTime() > right->getMaxCPUTime();
+}
+
+
+//max at the end
+bool Memory::sortByLeastCPUTime(PCB* left, PCB* right) {
+	return left->getMaxCPUTime() < right->getMaxCPUTime();
 }
 
 bool Memory::sortByPCBSize(PCB* left, PCB* right) {
@@ -86,7 +93,7 @@ bool Memory::deleteFromMemory(PCB *pcb) {
 	mergeAdjacentSpaces();
 	pcb->setMemoryPos(-1);
 	pcb->setInMemory(false);
-	if (!pcb->shouldKill() && !(pcb->getPendingIO() > 0)) {
+	if (!pcb->shouldKill() && !(pcb->getPendingIO() > 0) && !pcb->isTooBig()) {
 		pop();
 		delete pcb;
 	}
@@ -158,4 +165,13 @@ void Memory::setJobDoingIO(PCB* p) {
 
 PCB* Memory::getJobDoingIO() {
 	return jobDoingIO;
+}
+
+PCB* Memory::findLargestJob() {
+	std::sort(jobs.begin(), jobs.end(), sortByMaxCPUTime);
+	PCB* temp = jobs.back();
+	jobs.pop_back();
+	temp->setTooBig(true);
+	std::sort(jobs.begin(), jobs.end(), sortByMaxCPUTime);
+	return temp;
 }
