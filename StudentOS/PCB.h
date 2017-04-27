@@ -17,6 +17,7 @@ class PCB
 	bool inMemory;
 	bool tooBig;
 	int prevClock;
+	int CPUTimeLeft;
 public:
 	PCB(int , int , int , int , int);
 	PCB();
@@ -43,6 +44,7 @@ public:
 	void setTooBig(bool);
 	int getPrevClock();
 	void setPrevClock(int);
+	int getCPUTimeLeft();
 };
 
 #endif

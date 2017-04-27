@@ -15,8 +15,8 @@ bool swappingOut = false;
 bool doingIO = false;
 void siodisk(int jobnum);
 void siodrum(int jobnum, int jobsize, int coreaddress, int direction);
-void ontrace(); // called without arguments
-void offtrace(); // called without arguments 
+void ontrace(); 
+void offtrace();
 void runFromLTS(int &, int []);
 void runCurrentJob(int &, int []);
 void runIO(int &, int[]);
@@ -27,7 +27,7 @@ void swapFromLTS(int &, int[]);
 
 void startup()
 {
-	ontrace();
+	//ontrace();
 }
 
 // INTERRUPT HANDLERS
@@ -50,7 +50,7 @@ void Crint(int &a, int p[])
 	}
 	else {
 		LTS.push_back(temp);
-		std::sort(LTS.begin(), LTS.end(), memory.sortByMaxCPUTime);
+		std::sort(LTS.begin(), LTS.end(), memory.sortByRemainingTime);
 	}
 	runCurrentJob(a, p);
 }
@@ -83,9 +83,9 @@ void Drmint(int &a, int p[])
 		swappingOut = false;
 	}
 	runIO(a, p);
+	runCurrentJob(a, p);
 	swapFromLTS(a, p);
 	swapOut(a, p);
-	runCurrentJob(a, p);
 }
 void Tro(int &a, int p[])
 {

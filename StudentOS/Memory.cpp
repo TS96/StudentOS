@@ -31,6 +31,15 @@ bool Memory::sortByPCBSize(PCB* left, PCB* right) {
 	return left->getJobSize() > right->getJobSize();
 }
 
+//biggest at the end
+bool Memory::sortByBiggestSize(PCB* left, PCB* right) {
+	return left->getJobSize() < right->getJobSize();
+}
+
+bool Memory::sortByRemainingTime(PCB* left, PCB* right) {
+	return left->getCPUTimeLeft() > right->getCPUTimeLeft();
+}
+
 bool Memory::sortIO(PCB* left, PCB* right) {
 	if (left->isInMemory() && right->isInMemory())
 		return left->getJobSize() > right->getJobSize();
@@ -95,10 +104,10 @@ bool Memory::deleteFromMemory(PCB *pcb) {
 	pcb->setInMemory(false);
 	if (!pcb->shouldKill() && !(pcb->getPendingIO() > 0) && !pcb->isTooBig()) {
 		pop();
-		delete pcb;
+		//delete pcb;
 	}
 	else if (pcb->shouldKill())
-		delete pcb;
+		//delete pcb;
 	printFST();
 	return true;
 }

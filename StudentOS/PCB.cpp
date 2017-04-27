@@ -2,7 +2,7 @@
 
 
 
-PCB::PCB(int jobN, int pri, int jobS, int maxTime, int memPos) : jobNumber(jobN), priority(pri), jobSize(jobS), maxCPUTime(maxTime), memoryPos(memPos)
+PCB::PCB(int jobN, int pri, int jobS, int maxTime, int memPos) : jobNumber(jobN), priority(pri), jobSize(jobS), maxCPUTime(maxTime), memoryPos(memPos), CPUTimeLeft(maxCPUTime)
 {
 	cpuTime = 0;
 	doingIO = false;
@@ -22,6 +22,7 @@ PCB::PCB() {
 	inMemory = false;
 	tooBig = false;
 	prevClock = 0;
+	CPUTimeLeft = 0;
 }
 
 PCB::~PCB() {
@@ -58,6 +59,7 @@ int PCB::getCPUTime() {
 
 void PCB::addCPUTime(int n) {
 	cpuTime += n;
+	CPUTimeLeft -= n;
 }
 
 bool PCB::isBlocked() {
@@ -118,3 +120,6 @@ int PCB::getPrevClock() {
 	return prevClock;
 }
 
+int PCB::getCPUTimeLeft() {
+	return CPUTimeLeft;
+}
