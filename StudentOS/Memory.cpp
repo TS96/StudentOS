@@ -3,8 +3,9 @@
 #include <iostream>
 
 
-//can decrease respone time to	2878.09 by sorting IO by maxcputime but dilation would be 4.5
-
+/*
+	can decrease response time to 1749 if I sort IO maxcputime but dilation would be 1.55
+*/
 Memory::Memory()
 {
 	FST.push_back(pair<int, int>(0, 100));
@@ -179,7 +180,7 @@ PCB* Memory::getJobDoingIO() {
 }
 
 PCB* Memory::findLargestJob() {
-	std::sort(jobs.begin(), jobs.end(), sortByMaxCPUTime);
+	std::sort(jobs.begin(), jobs.end(), sortByBiggestSize);
 	PCB* temp = jobs.back();
 	jobs.pop_back();
 	temp->setTooBig(true);
