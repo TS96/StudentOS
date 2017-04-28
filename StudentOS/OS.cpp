@@ -170,7 +170,6 @@ void swapOut(int &a, int p[]) {
 
 void runCurrentJob(int &a, int p[]) {
 	if (!memory.isEmpty()) {
-		//cout << memory.getNextJob()->getJobNumber() << endl << memory.getNextJob()->getMemoryPos() << endl << memory.getNextJob()->getJobSize() << endl;
 		p[2] = memory.getNextJob()->getMemoryPos();
 		p[3] = memory.getNextJob()->getJobSize();
 		p[4] = 1;

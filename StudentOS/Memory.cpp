@@ -3,6 +3,8 @@
 #include <iostream>
 
 
+//can decrease respone time to	2878.09 by sorting IO by maxcputime but dilation would be 4.5
+
 Memory::Memory()
 {
 	FST.push_back(pair<int, int>(0, 100));
@@ -42,7 +44,7 @@ bool Memory::sortByRemainingTime(PCB* left, PCB* right) {
 
 bool Memory::sortIO(PCB* left, PCB* right) {
 	if (left->isInMemory() && right->isInMemory())
-		return left->getJobSize() > right->getJobSize();
+		return sortByRemainingTime(left, right);
 	else
 		return left->isInMemory() < right->isInMemory();
 }
