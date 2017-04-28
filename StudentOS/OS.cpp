@@ -162,6 +162,7 @@ void swapOut(int &a, int p[]) {
 			swapOutQ.front()->setTooBig(false);
 			swapOutQ.front()->setBlocked(false);
 			LTS.push_back(swapOutQ.front());
+			std::sort(LTS.begin(), LTS.end(), memory.sortByRemainingTime);
 		}
 		swapOutQ.pop();
 	}
