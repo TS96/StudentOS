@@ -18,6 +18,7 @@ class PCB
 	bool tooBig;
 	int prevClock;
 	int CPUTimeLeft;
+	bool SwapOut;
 public:
 	PCB(int , int , int , int , int);
 	PCB();
@@ -45,6 +46,8 @@ public:
 	int getPrevClock();
 	void setPrevClock(int);
 	int getCPUTimeLeft();
+	void setToSwapOut(bool);
+	bool toSwapOut();
 };
 
 #endif

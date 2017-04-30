@@ -11,6 +11,7 @@ PCB::PCB(int jobN, int pri, int jobS, int maxTime, int memPos) : jobNumber(jobN)
 	pendingIO = 0;
 	inMemory = false;
 	tooBig = false;
+	SwapOut = false;
 	prevClock = 0;
 }
 PCB::PCB() {
@@ -20,6 +21,7 @@ PCB::PCB() {
 	killAfterIO = false;
 	pendingIO = 0;
 	inMemory = false;
+	SwapOut = false;
 	tooBig = false;
 	prevClock = 0;
 	CPUTimeLeft = 0;
@@ -122,4 +124,12 @@ int PCB::getPrevClock() {
 
 int PCB::getCPUTimeLeft() {
 	return CPUTimeLeft;
+}
+
+bool PCB::toSwapOut() {
+	return SwapOut;
+}
+
+void PCB::setToSwapOut(bool status) {
+	SwapOut = status;
 }

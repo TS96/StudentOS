@@ -54,11 +54,14 @@ bool Swapper::swapIn(int &a, int p[], PCB *temp, int memoryPos) {
 void Swapper::swapOut(int &a, int p[], Memory& memory) {
 	if (!swappingIn && !swappingOut && !swapOutQ.empty()) {
 		if ((swapOutQ.front()->isDoingIO() || swapOutQ.front()->getPendingIO() == 0 || !swapOutQ.front()->isInMemory()) && !swapOutQ.front()->isTooBig()) {
+			if (swapOutQ.front()->toSwapOut() && !swapOutQ.front()->isInMemory())
+				delete swapOutQ.front();
 			swapOutQ.pop();
 			return;
 		}
 		swapOutQ.front()->setBlocked(true);
 		siodrum(swapOutQ.front()->getJobNumber(), swapOutQ.front()->getJobSize(), swapOutQ.front()->getMemoryPos(), 1);
+		swapOutQ.front()->setToSwapOut(false);
 		swappingOut = true;
 		memory.deleteFromMemory(swapOutQ.front());
 		if (swapOutQ.front()->isTooBig()) {
@@ -83,6 +86,7 @@ void Swapper::swapFromLTS(int &a, int p[], Memory& memory) {
 }
 
 void Swapper::addToSwapOutQ(PCB* job) {
+	job->setToSwapOut(true);
 	swapOutQ.push(job);
 }
 

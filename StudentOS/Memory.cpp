@@ -107,10 +107,13 @@ bool Memory::deleteFromMemory(PCB *pcb) {
 	pcb->setInMemory(false);
 	if (!pcb->shouldKill() && !(pcb->getPendingIO() > 0) && !pcb->isTooBig()) {
 		pop();
-		//delete pcb;
+		if(!pcb->toSwapOut())
+			delete pcb;
 	}
-	else if (pcb->shouldKill())
-		//delete pcb;
+	else 
+		if (pcb->shouldKill()) {
+			delete pcb;
+		}
 	printFST();
 	return true;
 }
