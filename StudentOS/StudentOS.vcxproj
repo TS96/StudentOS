@@ -150,10 +150,12 @@
     <ClCompile Include="Memory.cpp" />
     <ClCompile Include="OS.cpp" />
     <ClCompile Include="PCB.cpp" />
+    <ClCompile Include="Swapper.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Memory.h" />
     <ClInclude Include="PCB.h" />
+    <ClInclude Include="Swapper.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
