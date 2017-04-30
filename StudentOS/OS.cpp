@@ -41,9 +41,8 @@ void Crint(int &a, int p[])
 	if (memoryPos != -1 && swapper.swapIn(a, p, temp, memoryPos)) {
 		cout << "swapped in new job #" << p[1] << endl;
 	}
-	else {
+	else 
 		swapper.addToLTS(temp);
-	}
 	runCurrentJob(a, p);
 }
 void Dskint(int &a, int p[])
@@ -54,13 +53,14 @@ void Dskint(int &a, int p[])
 		cout << "killed it" << endl;
 		memory.deleteFromMemory(memory.getJobDoingIO());
 	}
-	else if (memory.getJobDoingIO()->isBlocked()) {
-		memory.getJobDoingIO()->setBlocked(false);
-		memory.getJobDoingIO()->setDoingIO(false);
-		memory.push(memory.getJobDoingIO());
-	}
-	else
-		memory.getJobDoingIO()->setDoingIO(false);
+	else 
+		if (memory.getJobDoingIO()->isBlocked()) {
+			memory.getJobDoingIO()->setBlocked(false);
+			memory.getJobDoingIO()->setDoingIO(false);
+			memory.push(memory.getJobDoingIO());
+		}
+		else
+			memory.getJobDoingIO()->setDoingIO(false);
 	runIO(a, p);
 	runCurrentJob(a, p);
 }
@@ -71,9 +71,8 @@ void Drmint(int &a, int p[])
 		memory.insertNewJob(swapper.getJobBeingSwapped());
 		swapper.setSwappingIn(false);
 	}
-	else {
+	else 
 		swapper.setSwappingOut(false);
-	}
 	runIO(a, p);
 	runCurrentJob(a, p);
 	swapper.swapFromLTS(a, p, memory);
@@ -91,40 +90,44 @@ void Tro(int &a, int p[])
 			memory.killAfterIO(memory.getNextJob());
 		}
 		else
-		{
 			memory.deleteFromMemory(memory.getNextJob());
-		}
 	}
 	runCurrentJob(a,p);
 }
 void Svc(int &a, int p[])
 {
 	cout << "svc request" << " " << a << endl;
-	if (a == 6) {		//needs IO
-		memory.getNextJob()->incrementPendingIO();
-		IO.push_back(memory.getNextJob());
-		runIO(a, p);
-	}
-	else if (a == 5) {		//terminated
-		if (!memory.getNextJob()->isDoingIO() && memory.getNextJob()->getPendingIO()==0)
-			memory.deleteFromMemory(memory.getNextJob());
-		else {
-			cout << "Will kill it" << endl;
-			memory.killAfterIO(memory.getNextJob());
-		}
-	}
-	else if(a==7) {			//block
-		if (memory.getNextJob()->isDoingIO()) {
-			cout << "Doing IO" << endl;
-			memory.blockJob();
-		}
-		else
-			if (memory.getNextJob()->getPendingIO()>0) {
-				memory.getNextJob()->setBlocked(true);
-				swapper.addToSwapOutQ(memory.getNextJob());
-				swapper.swapOut(a, p, memory);
-				memory.pop();
+	switch (a) {
+		case 5:					//terimnate
+			if (!memory.getNextJob()->isDoingIO() && memory.getNextJob()->getPendingIO() == 0)
+				memory.deleteFromMemory(memory.getNextJob());
+			else {
+				cout << "Will kill it" << endl;
+				memory.killAfterIO(memory.getNextJob());
 			}
+			break;
+
+		case 6: 
+			if (a == 6) {		//needs IO
+				memory.getNextJob()->incrementPendingIO();
+				IO.push_back(memory.getNextJob());
+				runIO(a, p);
+			}
+			break;
+	
+		case 7:					//block
+			if (memory.getNextJob()->isDoingIO()) {
+				cout << "Doing IO" << endl;
+				memory.blockJob();
+			}
+			else
+				if (memory.getNextJob()->getPendingIO()>0) {
+					memory.getNextJob()->setBlocked(true);
+					swapper.addToSwapOutQ(memory.getNextJob());
+					swapper.swapOut(a, p, memory);
+					memory.pop();
+				}
+			break;
 	}
 	runCurrentJob(a, p);
 }
