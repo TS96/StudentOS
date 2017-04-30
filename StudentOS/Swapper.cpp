@@ -81,3 +81,11 @@ void Swapper::swapFromLTS(int &a, int p[], Memory& memory) {
 		}
 	}
 }
+
+void Swapper::addToSwapOutQ(PCB* job) {
+	swapOutQ.push(job);
+}
+
+bool Swapper::swapOutQEmpty() {
+	return swapOutQ.empty();
+}

@@ -26,5 +26,7 @@ public:
 	void setSwappingOut(bool);
 	PCB* getJobBeingSwapped();
 	void addToLTS(PCB*);
+	void addToSwapOutQ(PCB*);
+	bool swapOutQEmpty();
 };
 

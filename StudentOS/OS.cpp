@@ -1,28 +1,21 @@
 #include <filesystem>
 #include "PCB.h"
 #include "Memory.h"
+#include "Swapper.h"
 #include <iostream>
 #include <queue>
 #include <vector>
 
 Memory memory;
-PCB* beingSwapped;
-vector<PCB*> LTS;
+Swapper swapper;
 vector<PCB*> IO;
-queue<PCB*> swapOutQ;
-bool swappingIn = false;
-bool swappingOut = false;
+
 bool doingIO = false;
 void siodisk(int jobnum);
-void siodrum(int jobnum, int jobsize, int coreaddress, int direction);
 void ontrace(); 
 void offtrace();
-void runFromLTS(int &, int []);
 void runCurrentJob(int &, int []);
 void runIO(int &, int[]);
-bool swapIn(int &, int[], PCB *, int);
-void swapOut(int &, int[]);
-void swapFromLTS(int &, int[]);
 
 
 void startup()
@@ -45,12 +38,11 @@ void Crint(int &a, int p[])
 	// p [5] = current time
 	PCB* temp = new PCB(p[1], p[2], p[3], p[4], -1);
 	int memoryPos = memory.findMemPos(temp);
-	if (memoryPos != -1 && swapIn(a, p, temp, memoryPos)) {
+	if (memoryPos != -1 && swapper.swapIn(a, p, temp, memoryPos)) {
 		cout << "swapped in new job #" << p[1] << endl;
 	}
 	else {
-		LTS.push_back(temp);
-		std::sort(LTS.begin(), LTS.end(), memory.sortByRemainingTime);
+		swapper.addToLTS(temp);
 	}
 	runCurrentJob(a, p);
 }
@@ -75,17 +67,17 @@ void Dskint(int &a, int p[])
 void Drmint(int &a, int p[])
 {
 	cout << "drum interrupt" << " " << a << endl;
-	if (swappingIn) {
-		memory.insertNewJob(beingSwapped);
-		swappingIn = false;
+	if (swapper.isSwappingIn()) {
+		memory.insertNewJob(swapper.getJobBeingSwapped());
+		swapper.setSwappingIn(false);
 	}
 	else {
-		swappingOut = false;
+		swapper.setSwappingOut(false);
 	}
 	runIO(a, p);
 	runCurrentJob(a, p);
-	swapFromLTS(a, p);
-	swapOut(a, p);
+	swapper.swapFromLTS(a, p, memory);
+	swapper.swapOut(a, p, memory);
 }
 void Tro(int &a, int p[])
 {
@@ -129,43 +121,12 @@ void Svc(int &a, int p[])
 		else
 			if (memory.getNextJob()->getPendingIO()>0) {
 				memory.getNextJob()->setBlocked(true);
-				swapOutQ.push(memory.getNextJob());
-				swapOut(a, p);
+				swapper.addToSwapOutQ(memory.getNextJob());
+				swapper.swapOut(a, p, memory);
 				memory.pop();
 			}
 	}
 	runCurrentJob(a, p);
-}
-
-
-bool swapIn(int &a, int p[], PCB *temp, int memoryPos) {
-	if (!swappingIn && !swappingOut) {
-		siodrum(temp->getJobNumber(), temp->getJobSize(), memoryPos, 0);
-		swappingIn = true;
-		beingSwapped = temp;
-		return true;
-	}
-	return false;
-}
-
-void swapOut(int &a, int p[]) {
-	if (!swappingIn && !swappingOut && !swapOutQ.empty()) {
-		if ((swapOutQ.front()->isDoingIO() || swapOutQ.front()->getPendingIO()==0 || !swapOutQ.front()->isInMemory()) && !swapOutQ.front()->isTooBig()) {
-			swapOutQ.pop();
-			return;
-		}
-		swapOutQ.front()->setBlocked(true);
-		siodrum(swapOutQ.front()->getJobNumber(), swapOutQ.front()->getJobSize(), swapOutQ.front()->getMemoryPos(), 1);
-		swappingOut = true;
-		memory.deleteFromMemory(swapOutQ.front());
-		if (swapOutQ.front()->isTooBig()) {
-			swapOutQ.front()->setTooBig(false);
-			swapOutQ.front()->setBlocked(false);
-			LTS.push_back(swapOutQ.front());
-			std::sort(LTS.begin(), LTS.end(), memory.sortByRemainingTime);
-		}
-		swapOutQ.pop();
-	}
 }
 
 void runCurrentJob(int &a, int p[]) {
@@ -177,25 +138,8 @@ void runCurrentJob(int &a, int p[]) {
 		memory.getNextJob()->setPrevClock(p[5]);
 	}
 	else
-		runFromLTS(a, p);
+		swapper.runFromLTS(a, p, memory);
 }	
-
-void runFromLTS(int &a, int p[]) {
-	cout << "Run from LTS " << LTS.size()<< endl;
-	swapFromLTS(a, p);
-	a = 1;
-}
-
-void swapFromLTS(int &a, int p[]) {
-	if (!LTS.empty()) {
-		PCB* temp = LTS.back();
-		int memoryPos = memory.findMemPos(temp);
-		if (memoryPos != -1) {
-			if (swapIn(a, p, temp, memoryPos))
-				LTS.pop_back();
-		}
-	}
-}
 
 void runIO(int &a, int p[]) {
 	std::sort(IO.begin(), IO.end(), memory.sortIO);
@@ -211,14 +155,13 @@ void runIO(int &a, int p[]) {
 		else {
 			int memoryPos = memory.findMemPos(IO.back());
 			if (memoryPos != -1) 
-				swapIn(a, p, IO.back(), memoryPos);
+				swapper.swapIn(a, p, IO.back(), memoryPos);
 			else {
-				if (swapOutQ.empty() && !swappingIn && !swappingOut) {
+				if (swapper.swapOutQEmpty() && !swapper.isSwappingIn() && !swapper.isSwappingOut()) {
 					PCB* temp = memory.findLargestJob();
 					cout << "Swapout #" << temp->getJobNumber() << "  " << memoryPos << endl;
-					swapOutQ.push(temp);
-					swapOut(a, p);
-
+					swapper.addToSwapOutQ(temp);
+					swapper.swapOut(a, p, memory);
 				}
 			}
 		}
