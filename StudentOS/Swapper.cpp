@@ -31,8 +31,7 @@ PCB* Swapper::getJobBeingSwapped() {
 }
 
 void Swapper::addToLTS(PCB* newJob) {
-	LTS.push_back(newJob);
-	std::sort(LTS.begin(), LTS.end(), Memory::sortByRemainingTime);
+	LTS.push(newJob);
 }
 
 void Swapper::runFromLTS(int &a, int p[], Memory& memory) {
@@ -67,8 +66,7 @@ void Swapper::swapOut(int &a, int p[], Memory& memory) {
 		if (swapOutQ.front()->isTooBig()) {
 			swapOutQ.front()->setTooBig(false);
 			swapOutQ.front()->setBlocked(false);
-			LTS.push_back(swapOutQ.front());
-			std::sort(LTS.begin(), LTS.end(), memory.sortByRemainingTime);
+			LTS.push(swapOutQ.front());
 		}
 		swapOutQ.pop();
 	}
@@ -76,11 +74,11 @@ void Swapper::swapOut(int &a, int p[], Memory& memory) {
 
 void Swapper::swapFromLTS(int &a, int p[], Memory& memory) {
 	if (!LTS.empty()) {
-		PCB* temp = LTS.back();
+		PCB* temp = LTS.top();
 		int memoryPos = memory.findMemPos(temp);
 		if (memoryPos != -1) {
 			if (swapIn(a, p, temp, memoryPos))
-				LTS.pop_back();
+				LTS.pop();
 		}
 	}
 }

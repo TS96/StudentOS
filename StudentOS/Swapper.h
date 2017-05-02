@@ -10,7 +10,7 @@ class Swapper
 {
 private:
 	PCB* beingSwapped;
-	vector<PCB*> LTS;
+	priority_queue<PCB*, vector<PCB*>, PCB> LTS;
 	queue<PCB*> swapOutQ;
 	bool swappingIn;
 	bool swappingOut;

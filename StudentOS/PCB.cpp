@@ -1,4 +1,5 @@
 #include "PCB.h"
+#include "Memory.h"
 
 
 
@@ -132,4 +133,8 @@ bool PCB::toSwapOut() {
 
 void PCB::setToSwapOut(bool status) {
 	SwapOut = status;
+}
+
+bool PCB::operator() (PCB* lhs, PCB* rhs) const{
+	return Memory::sortByRemainingTime(lhs, rhs);
 }

@@ -48,6 +48,7 @@ public:
 	int getCPUTimeLeft();
 	void setToSwapOut(bool);
 	bool toSwapOut();
+	bool operator() (PCB*, PCB*) const;
 };
 
 #endif
