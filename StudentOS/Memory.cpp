@@ -4,8 +4,8 @@
 
 
 /*
-	can decrease response time to 1749 if I sort IO maxcputime but dilation would be 1.55
-	sort IO by maxcputime dilation = 1.30, response = 2.3, jobs = 441
+	can decrease response time to 1749 if I sort IO maxcputime but dilation would be 1.55 with LTS by remainingtime
+	sort IO by maxcputime dilation = 1.30, response = 2.3, jobs = 441 with LTS by size
 */
 Memory::Memory()
 {
