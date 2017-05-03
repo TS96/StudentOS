@@ -5,6 +5,7 @@
 
 /*
 	can decrease response time to 1749 if I sort IO maxcputime but dilation would be 1.55
+	sort IO by maxcputime dilation = 1.30, response = 2.3, jobs = 441
 */
 Memory::Memory()
 {
@@ -42,6 +43,11 @@ bool Memory::sortByBiggestSize(PCB* left, PCB* right) {
 bool Memory::sortByRemainingTime(PCB* left, PCB* right) {
 	return left->getCPUTimeLeft() > right->getCPUTimeLeft();
 }
+
+bool Memory::sortByBiggestRemainingTime(PCB* left, PCB* right) {
+	return left->getCPUTimeLeft() < right->getCPUTimeLeft();
+}
+
 
 bool Memory::sortIO(PCB* left, PCB* right) {
 	if (left->isInMemory() && right->isInMemory())
@@ -88,7 +94,7 @@ void Memory::mergeAdjacentSpaces() {
 	if (FST.size() < 2)
 		return;
 	std::sort(FST.begin(), FST.end(), sortByAddress);
-	for (int i = 0; i < FST.size() - 1; i++) {
+	for (size_t  i = 0; i < FST.size() - 1; i++) {
 		if (FST[i].first + FST[i].second == FST[i + 1].first) {
 			FST[i].second += FST[i + 1].second;
 			FST.erase(FST.begin() + i + 1);
@@ -119,7 +125,7 @@ bool Memory::deleteFromMemory(PCB *pcb) {
 }
 
 int Memory::findSpot(PCB* job) {
-	for (int i = 0; i < FST.size(); i++)
+	for (size_t  i = 0; i < FST.size(); i++)
 		if (FST[i].second >= job->getJobSize()) {
 			return i;
 		}
@@ -183,7 +189,7 @@ PCB* Memory::getJobDoingIO() {
 }
 
 PCB* Memory::findLargestJob() {
-	std::sort(jobs.begin(), jobs.end(), sortByBiggestSize);
+	std::sort(jobs.begin(), jobs.end(), sortByBiggestSize);			//sort by leastcputime dilation =1.42, response = 2.1, jobs = 446
 	PCB* temp = jobs.back();
 	jobs.pop_back();
 	temp->setTooBig(true);

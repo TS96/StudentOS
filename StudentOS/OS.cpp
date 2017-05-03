@@ -45,6 +45,7 @@ void Crint(int &a, int p[])
 		swapper.addToLTS(temp);
 	runCurrentJob(a, p);
 }
+
 void Dskint(int &a, int p[])
 {
 	cout << "disk interrupt" << " " << a << endl;
@@ -64,6 +65,7 @@ void Dskint(int &a, int p[])
 	runIO(a, p);
 	runCurrentJob(a, p);
 }
+
 void Drmint(int &a, int p[])
 {
 	cout << "drum interrupt" << " " << a << endl;
@@ -78,6 +80,7 @@ void Drmint(int &a, int p[])
 	swapper.swapFromLTS(a, p, memory);
 	swapper.swapOut(a, p, memory);
 }
+
 void Tro(int &a, int p[])
 {
 	// Timer-Run-Out.
@@ -94,6 +97,7 @@ void Tro(int &a, int p[])
 	}
 	runCurrentJob(a,p);
 }
+
 void Svc(int &a, int p[])
 {
 	cout << "svc request" << " " << a << endl;

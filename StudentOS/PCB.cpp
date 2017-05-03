@@ -136,5 +136,6 @@ void PCB::setToSwapOut(bool status) {
 }
 
 bool PCB::operator() (PCB* lhs, PCB* rhs) const{
-	return Memory::sortByRemainingTime(lhs, rhs);
+	return Memory::sortByPCBSize(lhs, rhs);				//sort by PCBSize dilation = 1.32, response time 2.5, jobs 448
+														//sort by remaining time dilation = 1.47, response time 2.3, jobs 450
 }

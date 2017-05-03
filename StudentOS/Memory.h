@@ -24,6 +24,7 @@ public:
 	static bool sortByLeastCPUTime(PCB*, PCB*);
 	static bool sortByBiggestSize(PCB*, PCB*);
 	static bool sortByRemainingTime(PCB*, PCB*);
+	static bool sortByBiggestRemainingTime(PCB*, PCB*);
 	void printFST();
 	PCB* getNextJob();
 	bool isEmpty();
