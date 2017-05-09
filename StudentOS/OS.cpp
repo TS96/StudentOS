@@ -19,25 +19,22 @@ void runIO(int &, int[], bool);
 void freeMemory(int &, int[], int);
 
 
-
+//Used to initilize objects and variables.
 void startup()
 {
 	//ontrace();
 }
 
-// INTERRUPT HANDLERS
-// The following 5 functions are the interrupt handlers. The arguments 
-// passed from the environment are detailed with each function below.
-// See RUNNING A JOB, below, for additional information
+/*
+	When a new job comes in, Crint gets called and p[] gets filled with 
+	information about that job. p[2] = priority, p[3] = job size in bytes,
+	p[4] = max CPU Time, p[5] = current time. Here, I either swap it into memory
+	if there's space and the swapper is free or I push it onto the LTS. 
+	At the end you run the next job if there's one available.
+*/
 void Crint(int &a, int p[])
 {
 	cout << "new job #" << p[1]<< endl;
-	// Indicates the arrival of a new job on the drum.
-	// At call: p [1] = job number
-	// p [2] = priority
-	// p [3] = job size, K bytes
-	// p [4] = max CPU time allowed for job
-	// p [5] = current time
 	PCB* temp = new PCB(p[1], p[2], p[3], p[4], -1);
 	int memoryPos = memory.findMemPos(temp);
 	if (memoryPos != -1 && swapper.swapIn(a, p, temp, memoryPos)) {
@@ -48,6 +45,15 @@ void Crint(int &a, int p[])
 	runCurrentJob(a, p);
 }
 
+
+/*
+	An interrupt handler for when a job finishes IO. If it was terminated while
+	doing IO, then you just delete it from memory. If it was blocked, 
+	then you pushed it back into the STS because it's still in memory
+	and of course you unblock it and indicate that it's not doing IO.
+	At the end, you try to start IO for a another job and run the next job
+	if there's any for both.
+*/
 void Dskint(int &a, int p[])
 {
 	cout << "disk interrupt" << endl;
@@ -67,6 +73,16 @@ void Dskint(int &a, int p[])
 	runCurrentJob(a, p);
 }
 
+/*
+	An interrupt handler for when a job gets swapped in or out
+	of memory. If a job was being swapped in, then it gets inserted into 
+	my representation of memory. At the end, I try to run IO first because
+	if the disk is idle, then you want to swapin a new job for IO asap. Then 
+	I run next job and if none is avaiable then I'd want to swapin a new one asap.
+	Then I try to swap in a job from the LTS even though it might not currently be needed
+	but that keeps the drum busy. I also check if the swapoutQ has something that needs to be
+	swapped out.
+*/
 void Drmint(int &a, int p[])
 {
 	cout << "drum interrupt" << " " << a << endl;
@@ -82,6 +98,13 @@ void Drmint(int &a, int p[])
 	swapper.swapOut(a, p, memory);
 }
 
+/*
+	Interrupt handler for when a job runs out of time.
+	Total runtime gets updated then if it's bigger or equal to 
+	max CPU time, the job gets killed if it's not doing IO or has pending IO, 
+	if it is then you mark it to be killed after it's done with IO. If it hasn't
+	exceded its max time then nothing happens and you run next job normally.
+*/
 void Tro(int &a, int p[])
 {
 	// Timer-Run-Out.
@@ -99,6 +122,17 @@ void Tro(int &a, int p[])
 	runCurrentJob(a,p);
 }
 
+
+/*
+Service interrupt handler for termination, IO request or be blocked.
+For termination, check if it has no pending or currently doing IO
+and kill it if not or mark to be killed when it's done. For IO requests,
+you call run IO with true as a parameter to mark it as a new IO request.
+For blocking, if it's doing IO then you block it in memory, if not you check 
+if it has any pending IO and if so you pop it from the STS (but stays in memory
+until it's swapped out) and add it to the swapoutQ and try to swapout because 
+it's currently just taking up space in memory.
+*/
 void Svc(int &a, int p[])
 {
 	cout << "svc request" << " " << a << endl;
@@ -133,6 +167,11 @@ void Svc(int &a, int p[])
 	runCurrentJob(a, p);
 }
 
+/*
+	Gets called when I want to run the next job. Checks if memory is empty and 
+	if it's not, then it gets the next job from the STS and runs it. If it is empty,
+	then it calls the LTS to check if it can run something from there.
+*/
 void runCurrentJob(int &a, int p[]) {
 	if (!memory.isEmpty()) {
 		p[2] = memory.getNextJob()->getMemoryPos();
@@ -145,6 +184,15 @@ void runCurrentJob(int &a, int p[]) {
 		swapper.runFromLTS(a, p, memory);
 }	
 
+
+/*
+	Handles all running IO. If it's a new request, then it adds it to the 
+	IO queue. The IO queue gets sorted based on my algorithm (not really a queue)
+	then it checks if it's empty or the disk is busy. If they're both false then
+	if the top of the queue is in memory, then you just start IO on it. If not, then
+	you need to find a place for it in memory and swap it in and if memory is full
+	then you need to free it in order to keep the disk busy at all times.
+*/
 void runIO(int &a, int p[], bool newRequest) {
 	if (newRequest) {
 		memory.getNextJob()->incrementPendingIO();
@@ -171,7 +219,13 @@ void runIO(int &a, int p[], bool newRequest) {
 	}
 }
 
-
+/*
+	FreeMemory finds the largest job in memory and tries to swap it out only if the 
+	drum is not busy because other wise it might get pushed to the swapoutQ but
+	only gets its turn after you don't need to free memory anymore. It doesn't check
+	if the job is doing IO or has pending IO because the function only gets called
+	when no job in memory can do IO.
+*/
 void freeMemory(int &a, int p[], int memoryPos) {
 	if (swapper.swapOutQEmpty() && !swapper.isSwappingIn() && !swapper.isSwappingOut()) {
 		PCB* temp = memory.findLargestJob();
@@ -188,8 +242,13 @@ void freeMemory(int &a, int p[], int memoryPos) {
 
 
 
-
-
+/*
+	I had to add this function which I got from the good people at
+	StackOverflow because the SOS file was compiled with an old compiler
+	and the internal implementation of some functions was changed afterwards
+	so this was the only way I could get it to work without having to recompile
+	the object file with a newer compiler.
+*/
 extern "C" FILE* __cdecl __iob_func()
 {
 	struct _iobuf_VS2012 { // ...\Microsoft Visual Studio 11.0\VC\include\stdio.h #56
@@ -203,12 +262,9 @@ extern "C" FILE* __cdecl __iob_func()
 		char *_tmpfname;
 	};
 	// VS2015 has only FILE = struct {void*}
-
 	int const count = sizeof(_iobuf_VS2012) / sizeof(FILE);
-
 	//// stdout
 	//return (FILE*)(&(__acrt_iob_func(1)->_Placeholder) - count);
-
 	// stderr
 	return (FILE*)(&(__acrt_iob_func(2)->_Placeholder) - 2 * count);
 }
