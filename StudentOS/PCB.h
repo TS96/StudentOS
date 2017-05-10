@@ -4,21 +4,22 @@
 class PCB
 {
 
-	int jobNumber;
-	int priority;
-	int jobSize;
-	int maxCPUTime;
-	int memoryPos;
-	int cpuTime;
-	int pendingIO;
-	bool blocked;
-	bool doingIO;
-	bool killAfterIO;
-	bool inMemory;
-	bool tooBig;
-	int prevClock;
-	int CPUTimeLeft;
-	bool SwapOut;
+	int jobNumber;		//stores the job #
+	int priority;		//stores the priority
+	int jobSize;		//stores the job size
+	int maxCPUTime;		//stores the max CPU time
+	int memoryPos;		//stores its position in memory
+	int cpuTime;		//total time running 
+	int pendingIO;		//number of pending IO requests
+	bool blocked;		//if the job is blocked
+	bool doingIO;		//if it's doing IO
+	bool killAfterIO;	//if it should be killed after finishing IO
+	bool inMemory;		//if the job is in memory
+	bool tooBig;		//if the job should be swapped out to make room
+	int prevClock;		//time it last ran of time
+	int CPUTimeLeft;	//stores how much max CPU time is left
+	bool SwapOut;		//whether it should be swapped out
+
 public:
 	PCB(int , int , int , int , int);
 	PCB();
