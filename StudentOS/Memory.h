@@ -7,10 +7,10 @@ using namespace std;
 class Memory
 {
 private:
-	vector<pair<int,int> > FST;
-	int findSpot(PCB *);
-	vector<PCB*> jobs;
-	PCB* jobDoingIO;
+	vector<pair<int,int> > FST;		//Free space table
+	int findSpot(PCB *);			//helper method that finds a free index in the FST
+	vector<PCB*> jobs;				//STS list of jobs
+	PCB* jobDoingIO;				//PCB that holds the job currently doing IO
 public:
 	Memory();
 	bool insertNewJob(PCB *);
