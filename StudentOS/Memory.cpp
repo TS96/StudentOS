@@ -5,7 +5,6 @@
 
 /*
 	can decrease response time to 1749 if I sort IO maxcputime but dilation would be 1.55 with LTS by remainingtime
-	sort IO by maxcputime dilation = 1.30, response = 2.3, jobs = 441 with LTS by size
 */
 Memory::Memory()
 {
@@ -27,8 +26,7 @@ bool Memory::sortByMaxCPUTime(PCB* left, PCB* right) {
 	return left->getMaxCPUTime() > right->getMaxCPUTime();
 }
 
-
-////sorts PCBs by max cpu time in ascending order
+//sorts PCBs by max cpu time in ascending order
 bool Memory::sortByLeastCPUTime(PCB* left, PCB* right) {
 	return left->getMaxCPUTime() < right->getMaxCPUTime();
 }
@@ -100,7 +98,6 @@ bool Memory::insertNewJob(PCB *newJob) {
 	mergeAdjacentSpaces();
 	return true;
 }
-
 
 //merges the adjacent entries in the FST
 void Memory::mergeAdjacentSpaces() {

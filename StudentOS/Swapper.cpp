@@ -67,23 +67,23 @@ bool Swapper::swapIn(int &a, int p[], PCB *temp, int memoryPos) {
 */
 void Swapper::swapOut(int &a, int p[], Memory& memory) {
 	if (!swappingIn && !swappingOut && !swapOutQ.empty()) {
-		if ((swapOutQ.front()->isDoingIO() || swapOutQ.front()->getPendingIO() == 0 || !swapOutQ.front()->isInMemory()) && !swapOutQ.front()->isTooBig()) {
-			if (swapOutQ.front()->toSwapOut() && !swapOutQ.front()->isInMemory())
-				delete swapOutQ.front();
-			swapOutQ.pop();
+		if ((swapOutQ.back()->isDoingIO() || swapOutQ.back()->getPendingIO() == 0 || !swapOutQ.back()->isInMemory()) && !swapOutQ.back()->isTooBig()) {
+			if (swapOutQ.back()->toSwapOut() && !swapOutQ.back()->isInMemory())
+				delete swapOutQ.back();
+			swapOutQ.pop_back();
 			return;
 		}
-		swapOutQ.front()->setBlocked(true);
-		siodrum(swapOutQ.front()->getJobNumber(), swapOutQ.front()->getJobSize(), swapOutQ.front()->getMemoryPos(), 1);
-		swapOutQ.front()->setToSwapOut(false);
+		swapOutQ.back()->setBlocked(true);
+		siodrum(swapOutQ.back()->getJobNumber(), swapOutQ.back()->getJobSize(), swapOutQ.back()->getMemoryPos(), 1);
+		swapOutQ.back()->setToSwapOut(false);
 		swappingOut = true;
-		memory.deleteFromMemory(swapOutQ.front());
-		if (swapOutQ.front()->isTooBig()) {
-			swapOutQ.front()->setTooBig(false);
-			swapOutQ.front()->setBlocked(false);
-			LTS.push(swapOutQ.front());
+		memory.deleteFromMemory(swapOutQ.back());
+		if (swapOutQ.back()->isTooBig()) {
+			swapOutQ.back()->setTooBig(false);
+			swapOutQ.back()->setBlocked(false);
+			LTS.push(swapOutQ.back());
 		}
-		swapOutQ.pop();
+		swapOutQ.pop_back();
 	}
 }
 
@@ -102,13 +102,14 @@ void Swapper::swapFromLTS(int &a, int p[], Memory& memory) {
 	}
 }
 
-//Push a job onto the swap out queue
+//Push a job onto the swap out vector and sorts it
 void Swapper::addToSwapOutQ(PCB* job) {
 	job->setToSwapOut(true);
-	swapOutQ.push(job);
+	swapOutQ.push_back(job);
+	std::sort(swapOutQ.begin(), swapOutQ.end(), Memory::sortByBiggestRemainingTime);
 }
 
-//Check if the swap out queue is empty
+//Check if the swap out vector is empty
 bool Swapper::swapOutQEmpty() {
 	return swapOutQ.empty();
 }
