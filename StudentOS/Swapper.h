@@ -9,11 +9,11 @@ using namespace std;
 class Swapper
 {
 private:
-	PCB* beingSwapped;
-	priority_queue<PCB*, vector<PCB*>, PCB> LTS;
-	queue<PCB*> swapOutQ;
-	bool swappingIn;
-	bool swappingOut;
+	PCB* beingSwapped;			//stores the job currently being swapped
+	priority_queue<PCB*, vector<PCB*>, PCB> LTS;			//Long term scheduler priority queue with a custom sort function
+	queue<PCB*> swapOutQ;		//Queue of jobs to be swapped out
+	bool swappingIn;			//Is there a job being swapped in?
+	bool swappingOut;			//Is there a job being swapped out?
 public:
 	Swapper();
 	void runFromLTS(int &, int[], Memory&);
