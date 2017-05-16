@@ -1,3 +1,8 @@
+/*
+Tarek Saidee
+CISC 3320
+*/
+
 #include "Swapper.h"
 #include "Memory.h"
 

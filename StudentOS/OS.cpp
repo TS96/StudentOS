@@ -1,3 +1,8 @@
+/*
+	Tarek Saidee
+	CISC 3320
+*/
+
 #include <filesystem>
 #include "PCB.h"
 #include "Memory.h"
@@ -9,6 +14,7 @@
 Memory memory;
 Swapper swapper;
 vector<PCB*> IO;
+const int TIME_SLICE = 1;
 
 bool doingIO = false;
 void siodisk(int jobnum);
@@ -16,7 +22,7 @@ void ontrace();
 void offtrace();
 void runCurrentJob(int &, int []);
 void runIO(int &, int[], bool);
-void freeMemory(int &, int[], int);
+void freeMemory(int &, int[]);
 
 
 //Used to initilize objects and variables.
@@ -58,10 +64,8 @@ void Dskint(int &a, int p[])
 {
 	cout << "disk interrupt" << endl;
 	doingIO = false;
-	if (memory.getJobDoingIO()->shouldKill()) {
-		cout << "killed it" << endl;
+	if (memory.getJobDoingIO()->shouldKill())
 		memory.deleteFromMemory(memory.getJobDoingIO());
-	}
 	else {
 		memory.getJobDoingIO()->setDoingIO(false);
 		if (memory.getJobDoingIO()->isBlocked()) {
@@ -107,31 +111,25 @@ void Drmint(int &a, int p[])
 */
 void Tro(int &a, int p[])
 {
-	// Timer-Run-Out.
-	// At call: p [5] = current time
 	memory.getNextJob()->addCPUTime(p[5] - memory.getNextJob()->getPrevClock());
-	if (memory.getNextJob()->getCPUTime() >= memory.getNextJob()->getMaxCPUTime()) {
-		cout << "ran out of time" << endl;
-		if (memory.getNextJob()->isDoingIO() || memory.getNextJob()->getPendingIO() > 0) {
-			cout << "Will kill it" << endl;
+	if (memory.getNextJob()->getCPUTime() >= memory.getNextJob()->getMaxCPUTime())
+		if (memory.getNextJob()->isDoingIO() || memory.getNextJob()->getPendingIO() > 0)
 			memory.killAfterIO(memory.getNextJob());
-		}
 		else
 			memory.deleteFromMemory(memory.getNextJob());
-	}
 	runCurrentJob(a,p);
 }
 
 
 /*
-Service interrupt handler for termination, IO request or be blocked.
-For termination, check if it has no pending or currently doing IO
-and kill it if not or mark to be killed when it's done. For IO requests,
-you call run IO with true as a parameter to mark it as a new IO request.
-For blocking, if it's doing IO then you block it in memory, if not you check 
-if it has any pending IO and if so you pop it from the STS (but stays in memory
-until it's swapped out) and add it to the swapoutQ and try to swapout because 
-it's currently just taking up space in memory.
+	Service interrupt handler for termination, IO request or be blocked.
+	For termination, check if it has no pending or currently doing IO
+	and kill it if not or mark to be killed when it's done. For IO requests,
+	you call run IO with true as a parameter to mark it as a new IO request.
+	For blocking, if it's doing IO then you block it in memory, if not you check 
+	if it has any pending IO and if so you pop it from the STS (but stays in memory
+	until it's swapped out) and add it to the swapoutQ and try to swapout because 
+	it's currently just taking up space in memory.
 */
 void Svc(int &a, int p[])
 {
@@ -140,21 +138,15 @@ void Svc(int &a, int p[])
 		case 5:					//terimnate
 			if (!memory.getNextJob()->isDoingIO() && memory.getNextJob()->getPendingIO() == 0)
 				memory.deleteFromMemory(memory.getNextJob());
-			else {
-				cout << "Will kill it" << endl;
+			else 
 				memory.killAfterIO(memory.getNextJob());
-			}
 			break;
-
 		case 6:					//needs IO
 			runIO(a, p, true);
 			break;
-
 		case 7:					//block
-			if (memory.getNextJob()->isDoingIO()) {
-				cout << "Doing IO" << endl;
+			if (memory.getNextJob()->isDoingIO())
 				memory.blockJob();
-			}
 			else
 				if (memory.getNextJob()->getPendingIO()>0) {
 					memory.getNextJob()->setBlocked(true);
@@ -176,7 +168,7 @@ void runCurrentJob(int &a, int p[]) {
 	if (!memory.isEmpty()) {
 		p[2] = memory.getNextJob()->getMemoryPos();
 		p[3] = memory.getNextJob()->getJobSize();
-		p[4] = 1;
+		p[4] = TIME_SLICE;
 		a = 2;
 		memory.getNextJob()->setPrevClock(p[5]);
 	}
@@ -199,8 +191,7 @@ void runIO(int &a, int p[], bool newRequest) {
 		IO.push_back(memory.getNextJob());
 	}
 	std::sort(IO.begin(), IO.end(), memory.sortIO);
-	cout << IO.size() << " " << doingIO << endl;
-	if (!IO.empty() && !doingIO) {
+	if (!IO.empty() && !doingIO)
 		if (IO.back()->isInMemory()) {
 			doingIO = true;
 			IO.back()->setDoingIO(true);
@@ -213,10 +204,9 @@ void runIO(int &a, int p[], bool newRequest) {
 			if (memoryPos != -1) 
 				swapper.swapIn(a, p, IO.back(), memoryPos);
 			else {
-				freeMemory(a, p, memoryPos);
+				freeMemory(a, p);
 			}
 		}
-	}
 }
 
 /*
@@ -226,10 +216,10 @@ void runIO(int &a, int p[], bool newRequest) {
 	if the job is doing IO or has pending IO because the function only gets called
 	when no job in memory can do IO.
 */
-void freeMemory(int &a, int p[], int memoryPos) {
-	if (swapper.swapOutQEmpty() && !swapper.isSwappingIn() && !swapper.isSwappingOut()) {
+void freeMemory(int &a, int p[]) {
+	if (!swapper.isSwappingIn() && !swapper.isSwappingOut()) {
 		PCB* temp = memory.findLargestJob();
-		cout << "Swapout #" << temp->getJobNumber() << "  " << memoryPos << endl;
+		cout << "Swapout #" << temp->getJobNumber() << endl;
 		swapper.addToSwapOutQ(temp);
 		swapper.swapOut(a, p, memory);
 	}

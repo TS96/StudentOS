@@ -1,3 +1,8 @@
+/*
+Tarek Saidee
+CISC 3320
+*/
+
 #include "Memory.h"
 #include <algorithm>
 #include <iostream>
@@ -90,7 +95,6 @@ bool Memory::insertNewJob(PCB *newJob) {
 		if (p.second > 0)
 			FST.push_back(p);
 	}
-
 	newJob->setInMemory(true);
 	if (!newJob->isBlocked())
 		jobs.push_back(newJob);
@@ -134,10 +138,8 @@ bool Memory::deleteFromMemory(PCB *pcb) {
 			delete pcb;
 	}
 	else 
-		if (pcb->shouldKill()) {
+		if (pcb->shouldKill())
 			delete pcb;
-		}
-	printFST();
 	return true;
 }
 
